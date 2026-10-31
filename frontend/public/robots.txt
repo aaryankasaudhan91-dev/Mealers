@@ -3,3 +3,4 @@ Allow: /
 Disallow: /api/
 
 Sitemap: https://mealers.vercel.app/sitemap.xml
+
