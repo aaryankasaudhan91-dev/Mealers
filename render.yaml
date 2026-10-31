@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: mealers-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: MONGODB_DATABASE
+        value: mealers_demo
+      - key: FRONTEND_ORIGIN
+        value: "*"
+      - key: MONGODB_URI
+        sync: false
+
+  - type: web
+    name: mealers-frontend
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: mealers-backend
+          property: host

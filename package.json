@@ -1,9 +1,14 @@
 {
   "private": true,
-  "scripts": {
-    "start": "node -e \"console.error('Run npm start separately inside backend/ and frontend/.');process.exit(1)\"",
-    "check": "npm --prefix backend run check && npm --prefix frontend run check",
-    "test": "npm --prefix backend test"
+  "name": "mealers-workspace",
+  "engines": {
+    "node": ">=20"
   },
-  "name": "mealers-workspace"
+  "scripts": {
+    "build": "npm --prefix backend run check && npm --prefix frontend run check",
+    "check": "npm --prefix backend run check && npm --prefix frontend run check",
+    "test": "npm --prefix backend test",
+    "start:backend": "npm --prefix backend start",
+    "start:frontend": "npm --prefix frontend start"
+  }
 }
