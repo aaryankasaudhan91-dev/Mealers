@@ -1,6 +1,7 @@
 {
   "private": true,
   "name": "mealers-workspace",
+  "type": "module",
   "engines": {
     "node": ">=20"
   },
