@@ -17,6 +17,63 @@ const time=s=>new Date(s).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'
 const active=()=>state.bookings.find(b=>b.status==='confirmed');
 const eligible=m=>(state.diet==='any'||m.diet===state.diet||(state.diet==='vegetarian'&&m.diet==='vegan'))&&!state.avoid.some(a=>m.allergens.includes(a))&&m.walk<=state.maxWalk;
 
+function trackEvent(name, data={}){
+  const consent = typeof localStorage !== 'undefined' ? localStorage.getItem('mealers_cookie_consent') : null;
+  if(consent === 'essential') return;
+  try{
+    const payload = JSON.stringify({
+      event: name,
+      data,
+      tab: state.tab,
+      url: window.location.pathname,
+      ts: new Date().toISOString()
+    });
+    if(typeof navigator !== 'undefined' && navigator.sendBeacon){
+      navigator.sendBeacon('/api/analytics', new Blob([payload], {type: 'application/json'}));
+    } else {
+      fetch('/api/analytics', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: payload,
+        keepalive: true
+      }).catch(()=>{});
+    }
+  }catch{}
+}
+
+function initCookieBanner(){
+  const banner = $('#cookie-banner');
+  if(!banner) return;
+  const consent = typeof localStorage !== 'undefined' ? localStorage.getItem('mealers_cookie_consent') : null;
+  if(!consent){
+    banner.innerHTML = `
+      <div class="cookie-copy">
+        <h3><span>🍪</span> Campus Dining Privacy & Cookies</h3>
+        <p>Mealers uses essential local session tokens to remember your reserved meals, plus anonymous zero-cookie telemetry to reduce cafeteria food waste. We never track you across sites.</p>
+      </div>
+      <div class="cookie-actions">
+        <button class="cookie-btn-secondary" id="cookie-essential-btn">Essential Only</button>
+        <button class="cookie-btn-primary" id="cookie-accept-btn">Accept All</button>
+      </div>
+    `;
+    banner.classList.remove('hidden');
+    const accept = $('#cookie-accept-btn'), essential = $('#cookie-essential-btn');
+    if(accept) accept.onclick = () => {
+      localStorage.setItem('mealers_cookie_consent', 'all');
+      banner.classList.add('hidden');
+      trackEvent('cookie_consent', {choice: 'all'});
+      toast('Cookie preferences saved: All enabled.');
+    };
+    if(essential) essential.onclick = () => {
+      localStorage.setItem('mealers_cookie_consent', 'essential');
+      banner.classList.add('hidden');
+      toast('Cookie preferences saved: Essential only.');
+    };
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
 async function refresh(){
   state.loading=true;
   try{
@@ -76,6 +133,10 @@ function shell(content){
       <strong>Security notice</strong> Demo accounts are switchable. Use synthetic data only. Real authentication and operational checks are required before a live pilot.
     </aside>
   </main>
+  ${state.user?.role !== 'manager' ? `
+  <aside class="mobile-cta-bar" aria-label="Quick meal action">
+    <a class="primary mobile-cta-btn" href="#meals" data-scroll-cta>Plan Tomorrow's Lunch <span>↓</span></a>
+  </aside>` : ''}
   <footer>
     <span class="brand small">mealers<span>.</span></span>
     <p>Thoughtful meal planning, one campus at a time.</p>
@@ -129,11 +190,17 @@ function explore(){
       <span class="eyebrow">A BETTER LUNCH PLAN</span>
       <h1>Your next meal,<br><em>already planned.</em></h1>
       <p>Find a meal you’ll enjoy at a nearby campus kitchen. Choose your pickup time and let the kitchen plan ahead.</p>
-      <a class="primary" href="#meals">Explore the menu <span>↓</span></a>
+      <div class="hero-cta">
+        <a class="primary hero-cta-btn" href="#meals" data-scroll-cta>Plan Tomorrow's Lunch <span>↓</span></a>
+        <button class="hero-secondary-btn" data-tab="about">How It Works ↗</button>
+      </div>
       <div class="palette"><i></i><i></i><i></i><i></i><span>Good choices. A little less guesswork.</span></div>
     </div>
     <div class="hero-image">
-      <img src="/campus.png" alt="Concept illustration of students collecting lunch in a bright campus cafeteria">
+      <picture>
+        <source srcset="/campus.jpg" type="image/jpeg">
+        <img src="/campus.jpg" alt="Concept illustration of students and staff collecting planned lunches in a bright, sustainable campus cafeteria" width="1672" height="941" loading="eager" fetchpriority="high">
+      </picture>
       <span class="image-note">Mealers concept illustration</span>
     </div>
   </section>
@@ -714,14 +781,17 @@ function loginView(){
       </div>
 
       ${!isReg ? `
-      <form id="auth-login-form">
+      <form id="auth-login-form" novalidate>
+        <input type="text" name="_hp_campus" style="display:none!important;position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="form-group">
           <label for="login-account">Username, Email, or Demo Account</label>
-          <input id="login-account" name="account" placeholder="e.g. diner, new-diner, or your username" required autocomplete="username">
+          <input id="login-account" name="account" placeholder="e.g. diner, new-diner, or your username" required autocomplete="username" minlength="2">
+          <span class="field-error" id="login-account-error" aria-live="polite"></span>
         </div>
         <div class="form-group">
           <label for="login-password">Password</label>
           <input id="login-password" name="password" type="password" placeholder="Password (optional for demo accounts)" autocomplete="current-password">
+          <span class="field-error" id="login-password-error" aria-live="polite"></span>
         </div>
         <p id="auth-error" class="error-msg" role="alert"></p>
         <button type="submit" class="primary full" id="auth-submit-btn">Sign In <span>→</span></button>
@@ -731,18 +801,23 @@ function loginView(){
         </div>
       </form>
       ` : `
-      <form id="auth-register-form">
+      <form id="auth-register-form" novalidate>
+        <input type="text" name="_hp_campus" style="display:none!important;position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="form-group">
           <label for="reg-name">Full Name</label>
-          <input id="reg-name" name="name" placeholder="e.g. Maya Chen" required autocomplete="name">
+          <input id="reg-name" name="name" placeholder="e.g. Maya Chen" required autocomplete="name" minlength="2">
+          <span class="field-error" id="reg-name-error" aria-live="polite"></span>
         </div>
         <div class="form-group">
           <label for="reg-username">Username</label>
-          <input id="reg-username" name="username" placeholder="e.g. mayachen" required autocomplete="username">
+          <input id="reg-username" name="username" placeholder="e.g. mayachen" required autocomplete="username" minlength="3" maxlength="20" pattern="^[a-zA-Z0-9_-]{3,20}$">
+          <span class="field-hint">3-20 characters: letters, numbers, hyphens or underscores.</span>
+          <span class="field-error" id="reg-username-error" aria-live="polite"></span>
         </div>
         <div class="form-group">
           <label for="reg-email">Campus Email</label>
           <input id="reg-email" name="email" type="email" placeholder="e.g. maya@campus.edu" autocomplete="email">
+          <span class="field-error" id="reg-email-error" aria-live="polite"></span>
         </div>
         <div class="form-group">
           <label for="reg-role">Role on Campus</label>
@@ -762,7 +837,8 @@ function loginView(){
         </div>
         <div class="form-group">
           <label for="reg-password">Password</label>
-          <input id="reg-password" name="password" type="password" placeholder="At least 4 characters" minlength="4" autocomplete="new-password">
+          <input id="reg-password" name="password" type="password" placeholder="At least 4 characters" minlength="4" required autocomplete="new-password">
+          <span class="field-error" id="reg-password-error" aria-live="polite"></span>
         </div>
         <p id="auth-error" class="error-msg" role="alert"></p>
         <button type="submit" class="primary full" id="auth-submit-btn">Create Account <span>→</span></button>
@@ -796,6 +872,7 @@ async function render(){
   }
   $('#app').innerHTML=shell(content);
   bind();
+  initCookieBanner();
   if(state.tab==='about'){
     initScrollytelling();
   }
