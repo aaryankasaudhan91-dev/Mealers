@@ -79,3 +79,4 @@ jobs:
           test -f frontend/public/sitemap.xml || (echo "Missing sitemap.xml" && exit 1)
           test -f frontend/public/404.html || (echo "Missing 404.html" && exit 1)
           echo "All Vercel & Render cloud deployment assets verified successfully."
+
