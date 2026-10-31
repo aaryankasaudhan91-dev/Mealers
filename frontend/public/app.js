@@ -917,14 +917,40 @@ function modal(title,html,submit){
 function bind(){
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
     state.tab=b.dataset.tab;
+    trackEvent('tab_view',{tab:state.tab});
     render();
     window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  document.querySelectorAll('[data-scroll-cta]').forEach(cta=>{
+    cta.onclick=async e=>{
+      e.preventDefault();
+      trackEvent('cta_click',{action:'plan_tomorrow_lunch'});
+      if(state.tab!=='explore'){
+        state.tab='explore';
+        await render();
+      }
+      const el=document.getElementById('meals');
+      if(el)el.scrollIntoView({behavior:'smooth'});
+    };
+  });
+
+  document.querySelectorAll('.brand').forEach(brand=>{
+    brand.onclick=e=>{
+      e.preventDefault();
+      if(state.tab!=='explore'){
+        state.tab='explore';
+        render();
+      }
+      window.scrollTo({top:0,behavior:'smooth'});
+    };
   });
 
   if($('#logout-btn'))$('#logout-btn').onclick=async()=>{
     try{
       await api('logout',{});
       if(typeof sessionStorage!=='undefined')sessionStorage.removeItem('mealers_session');
+      trackEvent('user_logout');
       state.user=null;
       state.bookings=[];
       state.tab='explore';
@@ -944,6 +970,7 @@ function bind(){
         if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
         state.user=res.user;
         state.tab=res.user.role==='manager'?'kitchen':'explore';
+        trackEvent('demo_login',{account});
         toast(`Signed in as ${res.user.name}`);
         await refresh();
       }catch(err){
@@ -974,13 +1001,26 @@ function bind(){
     const fd=new FormData(e.target);
     const errEl=$('#auth-error');
     errEl.textContent='';
+    if(fd.get('_hp_campus')){
+      errEl.textContent='Automated submission blocked.';
+      return;
+    }
+    const account=(fd.get('account')||'').trim();
+    if(!account||account.length<2){
+      const fieldErr=$('#login-account-error');
+      if(fieldErr){fieldErr.textContent='Please enter your username, email, or demo name.';fieldErr.classList.add('show');}
+      $('#login-account')?.classList.add('input-invalid');
+      $('#login-account')?.focus();
+      return;
+    }
     const btn=$('#auth-submit-btn');
     btn.disabled=true;
     try{
-      const res=await api('login',{account:fd.get('account'),password:fd.get('password')});
+      const res=await api('login',{account,password:fd.get('password'),_hp_campus:fd.get('_hp_campus')});
       if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
       state.user=res.user;
       state.tab=res.user.role==='manager'?'kitchen':'explore';
+      trackEvent('user_login',{role:res.user.role});
       toast(`Welcome back, ${res.user.name}!`);
       await refresh();
     }catch(err){
@@ -994,20 +1034,65 @@ function bind(){
     const fd=new FormData(e.target);
     const errEl=$('#auth-error');
     errEl.textContent='';
+    if(fd.get('_hp_campus')){
+      errEl.textContent='Automated submission blocked.';
+      return;
+    }
+    document.querySelectorAll('.field-error').forEach(el=>{el.textContent='';el.classList.remove('show');});
+    document.querySelectorAll('.input-invalid').forEach(el=>el.classList.remove('input-invalid'));
+
+    const name=(fd.get('name')||'').trim();
+    const username=(fd.get('username')||'').trim();
+    const email=(fd.get('email')||'').trim();
+    const password=fd.get('password')||'';
+    let hasErr=false;
+
+    if(!name||name.length<2){
+      const el=$('#reg-name-error');
+      if(el){el.textContent='Full name must be at least 2 characters.';el.classList.add('show');}
+      $('#reg-name')?.classList.add('input-invalid');
+      hasErr=true;
+    }
+    if(!username||!/^[a-zA-Z0-9_-]{3,20}$/.test(username)){
+      const el=$('#reg-username-error');
+      if(el){el.textContent='Username must be 3-20 letters, numbers, hyphens or underscores.';el.classList.add('show');}
+      $('#reg-username')?.classList.add('input-invalid');
+      hasErr=true;
+    }
+    if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      const el=$('#reg-email-error');
+      if(el){el.textContent='Please enter a valid email address.';el.classList.add('show');}
+      $('#reg-email')?.classList.add('input-invalid');
+      hasErr=true;
+    }
+    if(!password||password.length<4){
+      const el=$('#reg-password-error');
+      if(el){el.textContent='Password must be at least 4 characters long.';el.classList.add('show');}
+      $('#reg-password')?.classList.add('input-invalid');
+      hasErr=true;
+    }
+
+    if(hasErr){
+      document.querySelector('.input-invalid')?.focus();
+      return;
+    }
+
     const btn=$('#auth-submit-btn');
     btn.disabled=true;
     try{
       const res=await api('register',{
-        name:fd.get('name'),
-        username:fd.get('username'),
-        email:fd.get('email'),
+        name,
+        username,
+        email,
         role:fd.get('role'),
         diet:fd.get('diet'),
-        password:fd.get('password')
+        password,
+        _hp_campus:fd.get('_hp_campus')
       });
       if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
       state.user=res.user;
       state.tab=res.user.role==='manager'?'kitchen':'explore';
+      trackEvent('user_register',{role:res.user.role,diet:res.user.diet});
       toast(`Account created! Welcome, ${res.user.name}.`);
       await refresh();
     }catch(err){
@@ -1066,13 +1151,18 @@ function bind(){
       <small>No payment or incentive is processed in this demo.</small>`,
       async()=>{
         const d=await api(old?`bookings/${old.id}/switch`:'bookings',{serviceId:m.id,requestKey:key,diet:state.diet,avoid:state.avoid,maxWalk:state.maxWalk});
+        trackEvent('meal_booked',{serviceId:m.id,name:m.name,kitchen:m.kitchen,isSwitch:Boolean(old)});
         state.tab='bookings';
         return d.message;
       }
     );
   });
 
-  document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>modal('Cancel this meal?',`<p>Before the preparation cutoff, your slot becomes available again. After the cutoff, the kitchen may already have started preparation.</p>`,async()=> (await api(`bookings/${b.dataset.cancel}/cancel`,{})).message));
+  document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>modal('Cancel this meal?',`<p>Before the preparation cutoff, your slot becomes available again. After the cutoff, the kitchen may already have started preparation.</p>`,async()=>{
+    const d=await api(`bookings/${b.dataset.cancel}/cancel`,{});
+    trackEvent('meal_cancelled',{bookingId:b.dataset.cancel});
+    return d.message;
+  }));
 
   if($('#pickup-form'))$('#pickup-form').onsubmit=async e=>{
     e.preventDefault();
