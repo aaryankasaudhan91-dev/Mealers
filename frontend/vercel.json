@@ -3,10 +3,6 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/[...path]"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/public/$1"
     }
@@ -27,4 +23,3 @@
     }
   ]
 }
-
