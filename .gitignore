@@ -3,3 +3,5 @@ node_modules/
 work/
 .env
 *.log
+.npm-cache/
+.mongodb-binaries/

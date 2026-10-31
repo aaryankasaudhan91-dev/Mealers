@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "mongodb": "^6.20.0"
+  },
+  "scripts": {
+    "dev": "node --env-file=.env --watch server.mjs",
+    "start": "node --env-file=.env server.mjs",
+    "test": "node --test tests/mongo.test.mjs",
+    "check": "node --check mongo-app.mjs && node --check server.mjs"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.2.0"
+  },
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "name": "mealers-backend",
+  "engines": {
+    "node": ">=24"
+  }
+}
