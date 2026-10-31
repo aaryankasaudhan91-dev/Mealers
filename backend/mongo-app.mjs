@@ -17,7 +17,7 @@ export async function initializeDatabase(db,client,{demo=true,now=Date.now}={}){
  if(!demo||await db.collection('users').countDocuments())return;
  const session=client.startSession();try{await session.withTransaction(async()=>{
   if(await db.collection('users').countDocuments({},{session}))return;
-  const users=[{_id:'diner',name:'Alex · demo diner',role:'diner',operator_id:1},{_id:'new-diner',name:'Sam · new diner',role:'diner',operator_id:1},{_id:'manager',name:'Kitchen team · demo',role:'manager',operator_id:1}];
+  const users=[{_id:'diner',name:'Alex · demo diner',role:'diner',operator_id:1},{_id:'new-diner',name:'Sam · new diner',role:'diner',operator_id:1},{_id:'eco-diner',name:'Jordan · vegetarian diner',role:'diner',operator_id:1,diet:'vegetarian'},{_id:'manager',name:'Kitchen team · demo',role:'manager',operator_id:1}];
   const cutoff=new Date(now()+7200000).toISOString(),pickup=new Date(now()+10800000).toISOString();
   const services=[{_id:1,name:'Harvest grain bowl',kitchen:'Garden Kitchen',description:'Roasted vegetables, herbed rice, chickpeas and lemon tahini.',diet:'vegan',allergens:['sesame'],walk:4,price:650,capacity:120,buffer:20,remaining:40},{_id:2,name:'Coconut curry & rice',kitchen:'Commons Kitchen',description:'A comforting vegetable curry with fragrant steamed rice.',diet:'vegan',allergens:['soy'],walk:7,price:600,capacity:100,buffer:20,remaining:0},{_id:3,name:'Teriyaki chicken bowl',kitchen:'Commons Kitchen',description:'Glazed chicken, rice, crunchy cabbage and cucumber.',diet:'regular',allergens:['soy','wheat'],walk:7,price:750,capacity:70,buffer:10,remaining:36}].map(s=>({...s,cutoff,pickup,operator_id:1,prepared:null,served:null,waste:null}));
   const bookings=[];for(const [sid,count]of [[1,60],[2,79],[3,24]])for(let n=0;n<count;n++){const uid=`sample-${sid}-${n}`;users.push({_id:uid,name:'Synthetic diner',role:'diner',operator_id:1});bookings.push({_id:randomUUID(),user_id:uid,service_id:sid,status:'confirmed',token:randomBytes(8).toString('hex').toUpperCase(),created:new Date(now()).toISOString(),previous_id:null});}
@@ -77,7 +77,71 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
    if(route==='/api/session'&&method==='GET'){let u=null;if(db)try{u=await user(req);}catch{}return send(res,200,{user:u,demo,setupRequired:!db,message:db?null:connectionMessage});}
    if(!db)fail(503,connectionMessage);
    let b={};if(method==='POST'){if(!(req.headers['content-type']||'').includes('application/json'))fail(415,'JSON content is required.');if(req.headers.origin&&!isOriginAllowed)fail(403,'This request did not come from an authorized Mealers origin.');let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>20000)fail(413,'Request is too large.');}try{b=JSON.parse(raw||'{}');}catch{fail(400,'Invalid request data.');}}
-   if(route==='/api/demo/login'&&method==='POST'){if(!demo)fail(404,'Demo accounts are disabled.');if(!['diner','new-diner','manager'].includes(b.account))fail(400,'Choose a valid demo account.');const u=await col('users').findOne({_id:b.account});if(!u)fail(503,'Demo identities have not been provisioned.');const token=randomBytes(24).toString('hex');sessions.set(token,{id:u._id,expires:now()+28800000});const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});}
+   if(route==='/api/demo/login'&&method==='POST'){
+    if(!demo)fail(404,'Demo accounts are disabled.');
+    const validDemos=['diner','new-diner','eco-diner','manager','chef'];
+    if(!validDemos.includes(b.account))fail(400,'Choose a valid demo account.');
+    let u=await col('users').findOne({_id:b.account});
+    if(!u){
+     if(b.account==='eco-diner')u={_id:'eco-diner',name:'Jordan · vegetarian diner',role:'diner',operator_id:1,diet:'vegetarian'};
+     else if(b.account==='chef')u={_id:'chef',name:'Elena · campus chef demo',role:'manager',operator_id:1};
+     else fail(503,'Demo identities have not been provisioned.');
+     try{await col('users').insertOne(u);}catch{}
+    }
+    const token=randomBytes(24).toString('hex');
+    sessions.set(token,{id:u._id,expires:now()+28800000});
+    const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
+    return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+   }
+   if(route==='/api/login'&&method==='POST'){
+    const rawAccount=(b.account||b.username||b.email||'').trim();
+    if(!rawAccount)fail(400,'Please enter your username, email or demo account.');
+    const demoAccounts=['diner','new-diner','eco-diner','manager','chef'];
+    if(demoAccounts.includes(rawAccount)){
+     let u=await col('users').findOne({_id:rawAccount});
+     if(!u){
+      if(rawAccount==='eco-diner')u={_id:'eco-diner',name:'Jordan · vegetarian diner',role:'diner',operator_id:1,diet:'vegetarian'};
+      else if(rawAccount==='chef')u={_id:'chef',name:'Elena · campus chef demo',role:'manager',operator_id:1};
+      else fail(404,'Demo account not provisioned.');
+      try{await col('users').insertOne(u);}catch{}
+     }
+     const token=randomBytes(24).toString('hex');
+     sessions.set(token,{id:u._id,expires:now()+28800000});
+     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
+     return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    }
+    const u=await col('users').findOne({$or:[{_id:rawAccount.toLowerCase()},{email:rawAccount.toLowerCase()}]});
+    if(!u)fail(404,'Account not found. Please register or check your username/email.');
+    if(u.passwordHash){
+     const pass=String(b.password||'');
+     const hash=createHash('sha256').update(pass).digest('hex');
+     if(hash!==u.passwordHash)fail(401,'Incorrect password. Please try again.');
+    }
+    const token=randomBytes(24).toString('hex');
+    sessions.set(token,{id:u._id,expires:now()+28800000});
+    const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
+    return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+   }
+   if(route==='/api/register'&&method==='POST'){
+    const name=text(b.name||'',80);
+    const rawId=text(b.username||b.email||'',80);
+    const userId=rawId.toLowerCase().replace(/[^a-z0-9_.-]/g,'-');
+    if(!userId||userId.length<3)fail(400,'Username must be at least 3 characters.');
+    const email=b.email?text(b.email,120).toLowerCase():`${userId}@campus.demo`;
+    const role=b.role==='manager'?'manager':'diner';
+    const diet=['vegan','vegetarian','regular','any'].includes(b.diet)?b.diet:'any';
+    const existing=await col('users').findOne({$or:[{_id:userId},{email}]});
+    if(existing)fail(409,'An account with this username or email already exists.');
+    const newUser={_id:userId,name,email,role,diet,operator_id:1,created:new Date(now()).toISOString()};
+    if(b.password&&String(b.password).length>=4){
+     newUser.passwordHash=createHash('sha256').update(String(b.password)).digest('hex');
+    }
+    await col('users').insertOne(newUser);
+    const token=randomBytes(24).toString('hex');
+    sessions.set(token,{id:newUser._id,expires:now()+28800000});
+    const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
+    return send(res,201,{user:{...newUser,id:newUser._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+   }
    if(route==='/api/logout'&&method==='POST'){const cookieToken=(req.headers.cookie||'').match(/mealers_session=([^;]+)/)?.[1];const headerToken=req.headers['authorization']?.startsWith('Bearer ')?req.headers['authorization'].slice(7).trim():req.headers['x-session-token'];const token=cookieToken||headerToken;if(token)sessions.delete(token);return send(res,200,{ok:true},{'Set-Cookie':'mealers_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
    if(route==='/api/meals'&&method==='GET')return send(res,200,{meals:(await col('services').find({operator_id:1}).sort({_id:1}).toArray()).map(serial),demo});
    if(route==='/api/bookings'&&method==='GET'){const u=await user(req),rows=await col('bookings').find({user_id:u.id}).sort({created:-1}).toArray();return send(res,200,{bookings:await Promise.all(rows.map(async r=>({...bookingView(r),meal:serial(await service(r.service_id))})))});}

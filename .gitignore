@@ -7,3 +7,4 @@ work/
 .mongodb-binaries/
 .vercel
 .DS_Store
+.agents

@@ -58,7 +58,11 @@ const server=http.createServer((req,res)=>{
     }
 
     if(req.method!=='GET'&&req.method!=='HEAD')return fail(res,405,'Method not allowed.');
-    const file=path.resolve(publicRoot,route==='/'?'index.html':decodeURIComponent(route).slice(1));
+    let resolvedRoute=route==='/'?'index.html':decodeURIComponent(route).slice(1);
+    if(route==='/favicon.ico'&&!existsSync(path.resolve(publicRoot,'favicon.ico'))){
+      resolvedRoute='favicon.svg';
+    }
+    const file=path.resolve(publicRoot,resolvedRoute);
     if(!file.startsWith(publicRoot+path.sep)||!existsSync(file)||!statSync(file).isFile())return fail(res,404,'Page not found.');
 
     const backendOrigin=backend?backend.origin:'';
