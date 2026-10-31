@@ -3,8 +3,8 @@
     "mongodb": "^6.20.0"
   },
   "scripts": {
-    "dev": "node --env-file=.env --watch server.mjs",
-    "start": "node --env-file=.env server.mjs",
+    "dev": "node --watch server.mjs",
+    "start": "node server.mjs",
     "test": "node --test tests/mongo.test.mjs",
     "check": "node --check mongo-app.mjs && node --check server.mjs"
   },
@@ -16,6 +16,6 @@
   "type": "module",
   "name": "mealers-backend",
   "engines": {
-    "node": ">=24"
+    "node": ">=20"
   }
 }
