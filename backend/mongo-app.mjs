@@ -32,6 +32,16 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
  const own=(s,u)=>{if(s.operator_id!==u.operator_id)fail(404,'Meal service not found.');};
  const service=async(id,session)=>{const s=await col('services').findOne({_id:id},{session});if(!s)fail(404,'Meal service not found.');return s;};
  const serial=s=>({...s,id:s._id,price:s.price/100,reserved:s.capacity-s.buffer-s.remaining,available:s.remaining,open:Date.parse(s.cutoff)>now()});
+ const sanitizeUser=u=>{if(!u)return null;const {passwordHash,...clean}=u;return {...clean,id:clean._id};};
+ const rateLimits=new Map();
+ const checkRateLimit=ip=>{
+  const nowMs=now();
+  const rec=rateLimits.get(ip)||{count:0,reset:nowMs+60000};
+  if(nowMs>rec.reset){rec.count=0;rec.reset=nowMs+60000;}
+  rec.count++;
+  rateLimits.set(ip,rec);
+  if(rec.count>60)fail(429,'Too many requests. Please wait a moment and try again.');
+ };
  const user=async req=>{
   const cookieToken=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('mealers_session='))?.slice(16);
   const headerToken=req.headers['authorization']?.startsWith('Bearer ')?req.headers['authorization'].slice(7).trim():req.headers['x-session-token'];
@@ -41,7 +51,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
   if(!s||s.expires<=now())fail(401,'Choose a demo account to continue.');
   const u=await col('users').findOne({_id:s.id});
   if(!u)fail(401,'Choose a demo account.');
-  return {...u,id:u._id};
+  return sanitizeUser(u);
  };
  const manager=async req=>{const u=await user(req);if(u.role!=='manager')fail(403,'Kitchen team access is required.');return u;};
  const opened=s=>{if(Date.parse(s.cutoff)<=now())fail(409,'The preparation cutoff has passed. Your existing booking stays unchanged.');};
@@ -76,7 +86,18 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
    if(route==='/api/health'&&method==='GET')return send(res,db?200:503,{status:db?'ok':'setup_required',database:'mongodb',configured:!!db,demo,message:db?'MongoDB connected':connectionMessage});
    if(route==='/api/session'&&method==='GET'){let u=null;if(db)try{u=await user(req);}catch{}return send(res,200,{user:u,demo,setupRequired:!db,message:db?null:connectionMessage});}
    if(!db)fail(503,connectionMessage);
-   let b={};if(method==='POST'){if(!(req.headers['content-type']||'').includes('application/json'))fail(415,'JSON content is required.');if(req.headers.origin&&!isOriginAllowed)fail(403,'This request did not come from an authorized Mealers origin.');let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>20000)fail(413,'Request is too large.');}try{b=JSON.parse(raw||'{}');}catch{fail(400,'Invalid request data.');}}
+   let b={};if(method==='POST'){
+    const clientIp=(req.headers['x-forwarded-for']||'').split(',')[0].trim()||req.socket?.remoteAddress||'local';
+    checkRateLimit(clientIp);
+    if(!(req.headers['content-type']||'').includes('application/json'))fail(415,'JSON content is required.');
+    if(req.headers.origin&&!isOriginAllowed)fail(403,'This request did not come from an authorized Mealers origin.');
+    let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>20000)fail(413,'Request is too large.');}
+    try{b=JSON.parse(raw||'{}');}catch{fail(400,'Invalid request data.');}
+    if(b._hp_campus)fail(400,'Automated submission detected.');
+   }
+   if(route==='/api/analytics'&&method==='POST'){
+    return send(res,200,{ok:true});
+   }
    if(route==='/api/demo/login'&&method==='POST'){
     if(!demo)fail(404,'Demo accounts are disabled.');
     const validDemos=['diner','new-diner','eco-diner','manager','chef'];
@@ -91,7 +112,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:u._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/login'&&method==='POST'){
     const rawAccount=(b.account||b.username||b.email||'').trim();
@@ -108,7 +129,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
      const token=randomBytes(24).toString('hex');
      sessions.set(token,{id:u._id,expires:now()+28800000});
      const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-     return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+     return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
     }
     const u=await col('users').findOne({$or:[{_id:rawAccount.toLowerCase()},{email:rawAccount.toLowerCase()}]});
     if(!u)fail(404,'Account not found. Please register or check your username/email.');
@@ -120,7 +141,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:u._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,200,{user:{...u,id:u._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/register'&&method==='POST'){
     const name=text(b.name||'',80);
@@ -140,7 +161,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:newUser._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,201,{user:{...newUser,id:newUser._id},token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,201,{user:sanitizeUser(newUser),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/logout'&&method==='POST'){const cookieToken=(req.headers.cookie||'').match(/mealers_session=([^;]+)/)?.[1];const headerToken=req.headers['authorization']?.startsWith('Bearer ')?req.headers['authorization'].slice(7).trim():req.headers['x-session-token'];const token=cookieToken||headerToken;if(token)sessions.delete(token);return send(res,200,{ok:true},{'Set-Cookie':'mealers_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
    if(route==='/api/meals'&&method==='GET')return send(res,200,{meals:(await col('services').find({operator_id:1}).sort({_id:1}).toArray()).map(serial),demo});

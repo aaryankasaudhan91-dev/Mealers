@@ -1,6 +1,7 @@
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state={user:null,tab:'explore',authMode:'login',meals:[],bookings:[],diet:'any',avoid:[],maxWalk:15,loading:true},busy=false;
+let scrollyAnimId=null;
 
 async function api(url,body){
   const token=typeof sessionStorage!=='undefined'?sessionStorage.getItem('mealers_session'):null;
@@ -40,7 +41,7 @@ function shell(content){
   ];
   return `
   <header>
-    <a class="brand" href="/">mealers<span>.</span></a>
+    <a class="brand" href="/" title="Mealers campus dining">mealers<span>.</span></a>
     <nav aria-label="Main navigation">
       ${navLinks.map(([k,v])=>`<button data-tab="${k}" class="${state.tab===k?'selected':''}">${v}</button>`).join('')}
     </nav>
@@ -85,6 +86,9 @@ function shell(content){
 
 function mealCard(m){
   const b=active(),isCurrent=b?.service_id===m.id;
+  const bookableTotal=m.capacity-m.buffer;
+  const percent=Math.min(100,Math.round(((bookableTotal-m.available)/bookableTotal)*100));
+  const fillClass=m.available<=5?'full':m.available<=15?'low':'';
   return `
   <article class="meal-card glass">
     <div class="meal-art art-${(m.id-1)%3}">
@@ -98,6 +102,9 @@ function mealCard(m){
       </div>
       <h3>${esc(m.name)}</h3>
       <p>${esc(m.description)}</p>
+      <div class="card-progress" title="${m.reserved} portions committed">
+        <div class="progress-fill ${fillClass}" style="width: ${percent}%"></div>
+      </div>
       <div class="meal-details">
         <span>Pickup ${time(m.pickup)}</span>
         <strong>S$${m.price.toFixed(2)}</strong>
@@ -207,6 +214,9 @@ function bookings(){
       <div class="pickup-code">
         <small>YOUR PICKUP CODE</small>
         <strong>${esc(b.token)}</strong>
+        <button type="button" class="copy-btn" data-copy="${esc(b.token)}">
+          <span>📋</span> Copy code
+        </button>
         <span>Show this code to kitchen staff</span>
       </div>
       <div class="booking-actions">
@@ -301,99 +311,330 @@ async function report(){
 function about(){
   return `
   <div class="page-heading">
-    <span class="eyebrow">OUR STORY & APPROACH</span>
+    <span class="eyebrow">3D INTERACTIVE STORY</span>
     <h1>About Mealers</h1>
-    <p>Rethinking campus dining through advance coordination, portion commitments, and zero guesswork.</p>
+    <p>Scroll down to experience how advance coordination eliminates campus meal guesswork.</p>
   </div>
 
-  <section class="about-hero glass">
-    <div class="about-hero-copy">
-      <span class="eyebrow">THE MEALERS CONCEPT</span>
-      <h2>A small choice before lunch helps campus kitchens plan ahead.</h2>
-      <p>Every day, campus cafeterias face an unpredictable gamble: prepare too much food and end up composting good meals, or prepare too little and leave hungry students without options. Mealers bridges that gap through advance portion reservations, giving kitchen staff verified demand before ingredients are prepped.</p>
-      <div class="about-stats-row">
-        <div>
-          <strong>2 hrs</strong>
-          <span>Cutoff before cooking begins</span>
+  <div class="scrolly-wrapper">
+    <!-- Sticky 3D Interactive Stage -->
+    <div class="scrolly-stage glass" id="scrolly-stage">
+      <canvas id="scrolly-canvas"></canvas>
+      
+      <div class="stage-overlay">
+        <div class="perspective-box" id="perspective-box">
+          <!-- Stage 1 3D Visual -->
+          <div class="stage-content" id="stage-1">
+            <span class="stage-tag red">Chapter 01 · The Friction</span>
+            <h3>The Unpredictable Cafeteria Gamble</h3>
+            <div class="dilemma-cards">
+              <div class="dilemma-box">
+                <span class="dish">🗑️</span>
+                <strong>Over-Prep Waste</strong>
+                <span>Cooking blind batches creates up to 35% surplus food that ends up discarded.</span>
+              </div>
+              <div class="vs-divider">VS</div>
+              <div class="dilemma-box">
+                <span class="dish">⏳</span>
+                <strong>Rush-Hour Queue</strong>
+                <span>Students wait 20-40 minutes only to find popular meals sold out.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 2 3D Visual -->
+          <div class="stage-content hidden" id="stage-2">
+            <span class="stage-tag blue">Chapter 02 · Synchronization</span>
+            <h3>The 2-Hour Advance Cutoff Window</h3>
+            <div class="clock-stage">
+              <div class="clock-3d">
+                <div class="clock-face">
+                  <span class="clock-hand"></span>
+                  <span class="clock-center"></span>
+                  <div class="clock-badge">2h CUTOFF</div>
+                </div>
+              </div>
+              <div class="clock-details">
+                <div class="detail-row">
+                  <b>10:30 AM · Diners Choose</b>
+                  <span>Browse ingredients, check allergens, and lock your pickup spot.</span>
+                </div>
+                <div class="detail-row highlight">
+                  <b>11:00 AM · Cutoff Passes</b>
+                  <span>Kitchen manager approves prep matching real requests.</span>
+                </div>
+                <div class="detail-row">
+                  <b>1:00 PM · Instant Pickup</b>
+                  <span>Show your token code for contactless collection in seconds.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 3 3D Visual -->
+          <div class="stage-content hidden" id="stage-3">
+            <span class="stage-tag green">Chapter 03 · Balance</span>
+            <h3>Committed Demand + Walk-in Buffer</h3>
+            <div class="matrix-stage">
+              <div class="matrix-layer committed">
+                <div class="layer-header">
+                  <span class="dot green"></span>
+                  <strong>Committed Reservations (80%)</strong>
+                </div>
+                <p>Guaranteed portions pre-ordered by diners before cooking begins.</p>
+              </div>
+              <div class="matrix-layer buffer">
+                <div class="layer-header">
+                  <span class="dot yellow"></span>
+                  <strong>Protected Walk-In Buffer (20%)</strong>
+                </div>
+                <p>A calculated reserve for spontaneous diners. No over-cooking, no unexpected stockouts.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 4 3D Visual -->
+          <div class="stage-content hidden" id="stage-4">
+            <span class="stage-tag yellow">Chapter 04 · Simulation</span>
+            <h3>Simulate Your Campus Savings</h3>
+            <div class="impact-simulator">
+              <div class="slider-control">
+                <label for="campus-size">Daily Campus Diners: <strong id="diner-val">500</strong></label>
+                <input type="range" id="campus-size" min="100" max="2500" step="50" value="500">
+              </div>
+              <div class="sim-results">
+                <div class="sim-metric">
+                  <strong id="meals-saved">135</strong>
+                  <span>Meals Saved / Day</span>
+                </div>
+                <div class="sim-metric">
+                  <strong id="co2-avoided">338 kg</strong>
+                  <span>CO₂ Avoided / Day</span>
+                </div>
+                <div class="sim-metric">
+                  <strong id="dollars-saved">S$875</strong>
+                  <span>Ingredient Value Kept</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <strong>100%</strong>
-          <span>Portion commitment transparency</span>
+
+        <!-- Stage Navigation Indicators -->
+        <div class="stage-indicators">
+          <button class="step-dot active" data-step="1" title="Chapter 1: The Problem"></button>
+          <button class="step-dot" data-step="2" title="Chapter 2: The Cutoff"></button>
+          <button class="step-dot" data-step="3" title="Chapter 3: The Buffer Matrix"></button>
+          <button class="step-dot" data-step="4" title="Chapter 4: Live Simulation"></button>
         </div>
-        <div>
+      </div>
+    </div>
+
+    <!-- Narrative Step Cards (Scroll Triggers) -->
+    <div class="scrolly-narrative">
+      <article class="narrative-step glass active" data-step-id="1">
+        <span class="eyebrow">CHAPTER 01</span>
+        <h2>The Unpredictable Kitchen Dilemma</h2>
+        <p>Every morning, campus cafeterias face an impossible choice: cook too much and risk throwing away pristine ingredients, or cook too conservatively and turn away students.</p>
+        <p>This structural blind spot results in high operating costs, discarded food, and long rush-hour queues.</p>
+        <div class="stat-callout">
+          <strong>1 in 3</strong>
+          <span>Portions risk over-preparation when kitchens cook without advance commitments.</span>
+        </div>
+      </article>
+
+      <article class="narrative-step glass" data-step-id="2">
+        <span class="eyebrow">CHAPTER 02</span>
+        <h2>The 2-Hour Synchronization Window</h2>
+        <p>Mealers introduces a calm rhythm: meals are reserved before an advance cutoff window, usually two hours before lunch service begins.</p>
+        <p>This gives kitchen staff the exact headcount they need to approve an accurate preparation plan. Instead of cooking blindly, chefs prep exactly what has been requested.</p>
+        <div class="stat-callout">
+          <strong>15 sec</strong>
+          <span>Average pickup time with digital token vs 15-minute rush hour queues.</span>
+        </div>
+      </article>
+
+      <article class="narrative-step glass" data-step-id="3">
+        <span class="eyebrow">CHAPTER 03</span>
+        <h2>The Protected Walk-In Buffer</h2>
+        <p>Advance booking does not mean shutting out spontaneous eaters. Every published meal service calculates and preserves a dedicated walk-in buffer.</p>
+        <p>This dual-capacity model protects walk-in diners from finding empty counters, while keeping committed meals safely isolated from accidental overselling.</p>
+        <div class="stat-callout">
           <strong>Zero</strong>
-          <span>Historical guesswork for kitchen staff</span>
+          <span>Overselling through MongoDB atomic reservation transactions.</span>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="comparison-section">
-    <div class="section-heading">
-      <div>
-        <span class="eyebrow">THE DIFFERENCE</span>
-        <h2>Why coordination changes everything</h2>
-      </div>
-      <p>Moving from blind estimations to real demand signals</p>
-    </div>
-    <div class="comparison-grid">
-      <article class="glass compare-card old">
-        <span class="pill red">The Old Way</span>
-        <h3>Guesswork & Rush Hours</h3>
-        <ul>
-          <li>Kitchens cook blind batches based on generic estimates from past weeks.</li>
-          <li>Unpredictable turnout causes daily preparation surplus and high costs.</li>
-          <li>Popular dishes run out abruptly, causing long, frustrated lines.</li>
-          <li>Allergens and ingredients are difficult to verify in a hurried queue.</li>
-        </ul>
       </article>
-      <article class="glass compare-card new">
-        <span class="pill green">The Mealers Way</span>
-        <h3>Coordinated & Predictable</h3>
-        <ul>
-          <li>Diners choose meals and review ingredients hours ahead of time.</li>
-          <li>Kitchen managers approve exact portion plans matching real commitments.</li>
-          <li>A dedicated walk-in buffer remains safely preserved for spontaneous diners.</li>
-          <li>Fast, contactless pickup codes eliminate lunch-hour waiting lines.</li>
-        </ul>
+
+      <article class="narrative-step glass" data-step-id="4">
+        <span class="eyebrow">CHAPTER 04</span>
+        <h2>Real Outcomes, Not Empty Claims</h2>
+        <p>In line with the Mealers philosophy, we observe before claiming. A booking is not automatically an avoided waste portion until verified at daily reconciliation.</p>
+        <p>Campus managers record actual served portions and unused counts daily, creating an auditable track record of ingredient efficiency and student satisfaction.</p>
+        <div class="cta-mini">
+          <button class="primary" data-tab="explore">Explore Today's Menu <span>↗</span></button>
+          <button class="secondary" data-tab="login">Try a Demo Profile</button>
+        </div>
       </article>
     </div>
-  </section>
-
-  <section class="how">
-    <span class="eyebrow">SHARED BENEFITS</span>
-    <h2>Built for both sides of the campus counter</h2>
-    <div class="how-grid">
-      <div>
-        <b>01</b>
-        <h3>For Diners</h3>
-        <p>Explore nearby campus kitchens by walking distance, dietary preference, and declared allergens. Reserve with one tap and collect instantly with your unique code.</p>
-      </div>
-      <div>
-        <b>02</b>
-        <h3>For Kitchen Teams</h3>
-        <p>Publish daily dishes with total capacity and walk-in buffers. Approve final preparation plans once the booking cutoff passes, then confirm pickups with one click.</p>
-      </div>
-      <div>
-        <b>03</b>
-        <h3>For Campus Communities</h3>
-        <p>Measure real utilization, switch rates, and unused portions without vanity claims. Create a sustainable, respectful dining environment.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="cta-banner glass">
-    <div>
-      <span class="eyebrow">READY TO EXPLORE?</span>
-      <h2>Experience campus coordination in action</h2>
-      <p>Switch between sample diner profiles and the kitchen team to explore the complete journey.</p>
-    </div>
-    <div class="cta-buttons">
-      <button class="primary" data-tab="explore">Explore Menu <span>↗</span></button>
-      <button class="secondary" data-tab="login">Sign In / Demo Accounts</button>
-    </div>
-  </section>
+  </div>
   `;
+}
+
+function initScrollytelling(){
+  const canvas=$('#scrolly-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let width=canvas.width=canvas.parentElement.clientWidth||500;
+  let height=canvas.height=canvas.parentElement.clientHeight||560;
+
+  window.addEventListener('resize',()=>{
+    if(!canvas.parentElement)return;
+    width=canvas.width=canvas.parentElement.clientWidth||500;
+    height=canvas.height=canvas.parentElement.clientHeight||560;
+  });
+
+  let currentStep=1;
+  let mouseX=0,mouseY=0;
+  let rotX=0,rotY=0;
+
+  const particles=Array.from({length:40},()=>({
+    x:(Math.random()-0.5)*500,
+    y:(Math.random()-0.5)*500,
+    z:Math.random()*600-300,
+    size:Math.random()*3+1.5,
+    speed:Math.random()*0.4+0.1
+  }));
+
+  const colors={
+    1:{p:'#c63c36'},
+    2:{p:'#2457d6'},
+    3:{p:'#16734a'},
+    4:{p:'#d49b06'}
+  };
+
+  const stage=$('#scrolly-stage');
+  const pBox=$('#perspective-box');
+
+  if(stage&&pBox){
+    stage.onmousemove=e=>{
+      const rect=stage.getBoundingClientRect();
+      const x=(e.clientX-rect.left)/rect.width-0.5;
+      const y=(e.clientY-rect.top)/rect.height-0.5;
+      mouseX=x*18;
+      mouseY=-y*18;
+    };
+    stage.onmouseleave=()=>{mouseX=0;mouseY=0;};
+  }
+
+  function setStep(stepNum){
+    if(stepNum===currentStep)return;
+    currentStep=stepNum;
+    for(let i=1;i<=4;i++){
+      const el=$(`#stage-${i}`);
+      if(el){
+        if(i===currentStep)el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    }
+    document.querySelectorAll('.step-dot').forEach(dot=>{
+      dot.classList.toggle('active',Number(dot.dataset.step)===currentStep);
+    });
+    document.querySelectorAll('.narrative-step').forEach(step=>{
+      step.classList.toggle('active',Number(step.dataset.stepId)===currentStep);
+    });
+  }
+
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting&&entry.intersectionRatio>=0.4){
+        const step=Number(entry.target.dataset.stepId);
+        if(step)setStep(step);
+      }
+    });
+  },{threshold:[0.3,0.5,0.7],rootMargin:'-10% 0px -15% 0px'});
+
+  document.querySelectorAll('.narrative-step').forEach(el=>observer.observe(el));
+
+  document.querySelectorAll('.step-dot').forEach(btn=>{
+    btn.onclick=()=>{
+      const step=Number(btn.dataset.step);
+      const targetEl=document.querySelector(`.narrative-step[data-step-id="${step}"]`);
+      if(targetEl)targetEl.scrollIntoView({behavior:'smooth',block:'center'});
+      setStep(step);
+    };
+  });
+
+  const slider=$('#campus-size');
+  if(slider){
+    const updateSim=()=>{
+      const val=Number(slider.value);
+      if($('#diner-val'))$('#diner-val').textContent=val;
+      if($('#meals-saved'))$('#meals-saved').textContent=Math.round(val*0.27);
+      if($('#co2-avoided'))$('#co2-avoided').textContent=Math.round(val*0.27*2.5)+' kg';
+      if($('#dollars-saved'))$('#dollars-saved').textContent='S$'+Math.round(val*0.27*6.5);
+    };
+    slider.oninput=updateSim;
+    updateSim();
+  }
+
+  let angle=0;
+  function render3D(){
+    if(!$('#scrolly-canvas'))return;
+    ctx.clearRect(0,0,width,height);
+
+    rotX+=(mouseY-rotX)*0.08;
+    rotY+=(mouseX-rotY)*0.08;
+    if(pBox){
+      pBox.style.transform=`rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+    }
+
+    angle+=0.008;
+    const cx=width/2,cy=height/2;
+    const stepColor=colors[currentStep]?.p||'#2457d6';
+
+    ctx.save();
+    ctx.translate(cx,cy);
+
+    // Orbit Ring
+    ctx.beginPath();
+    ctx.ellipse(0,35,160,55,angle*0.6,0,Math.PI*2);
+    ctx.strokeStyle=stepColor+'26';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    // Secondary Dashed Ring
+    ctx.beginPath();
+    ctx.ellipse(0,35,110,40,-angle*0.8,0,Math.PI*2);
+    ctx.strokeStyle=stepColor+'40';
+    ctx.lineWidth=2;
+    ctx.setLineDash([6,8]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 3D Particles
+    particles.forEach(p=>{
+      p.z-=p.speed*1.6;
+      if(p.z<-200)p.z=300;
+      const fov=380;
+      const scale=fov/(fov+p.z);
+      const px=p.x*scale;
+      const py=p.y*scale+35;
+
+      if(scale>0){
+        ctx.beginPath();
+        ctx.arc(px,py,p.size*scale,0,Math.PI*2);
+        ctx.fillStyle=stepColor;
+        ctx.globalAlpha=Math.min(0.7,scale*0.6);
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+
+    scrollyAnimId=requestAnimationFrame(render3D);
+  }
+
+  if(scrollyAnimId)cancelAnimationFrame(scrollyAnimId);
+  render3D();
 }
 
 function loginView(){
@@ -537,6 +778,10 @@ function loginView(){
 }
 
 async function render(){
+  if(scrollyAnimId){
+    cancelAnimationFrame(scrollyAnimId);
+    scrollyAnimId=null;
+  }
   let content;
   try{
     content=state.tab==='explore'?explore()
@@ -551,6 +796,9 @@ async function render(){
   }
   $('#app').innerHTML=shell(content);
   bind();
+  if(state.tab==='about'){
+    initScrollytelling();
+  }
 }
 
 function modal(title,html,submit){
@@ -623,6 +871,18 @@ function bind(){
         await refresh();
       }catch(err){
         toast(err.message);
+      }
+    };
+  });
+
+  document.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.onclick=async e=>{
+      e.stopPropagation();
+      try{
+        await navigator.clipboard.writeText(btn.dataset.copy);
+        toast(`Copied pickup code "${btn.dataset.copy}" to clipboard!`);
+      }catch{
+        toast(`Pickup Code: ${btn.dataset.copy}`);
       }
     };
   });

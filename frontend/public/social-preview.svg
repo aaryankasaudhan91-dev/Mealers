@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="bgGlow" cx="20%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#2457d6" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#14213d" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0b1324"/>
+    </radialGradient>
+    <radialGradient id="accentGlow" cx="85%" cy="75%" r="50%">
+      <stop offset="0%" stop-color="#16734a" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="630" fill="#0d172a"/>
+  <rect width="1200" height="630" fill="url(#bgGlow)"/>
+  <rect width="1200" height="630" fill="url(#accentGlow)"/>
+
+  <!-- Subtle Grid Lines -->
+  <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="280" x2="1200" y2="280"/>
+    <line x1="0" y1="440" x2="1200" y2="440"/>
+  </g>
+
+  <!-- Branding -->
+  <g transform="translate(100, 110)">
+    <!-- Brand Name -->
+    <text x="0" y="50" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="900" fill="#ffffff" letter-spacing="-3">
+      mealers<tspan fill="#c63c36">.</tspan>
+    </text>
+
+    <!-- Eyebrow Badge -->
+    <rect x="0" y="80" width="230" height="32" rx="16" fill="#2457d6" fill-opacity="0.25" stroke="#2457d6" stroke-opacity="0.5"/>
+    <text x="18" y="101" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#60a5fa" letter-spacing="2">
+      CAMPUS DINING PLATFORM
+    </text>
+
+    <!-- Main Headline -->
+    <text x="0" y="180" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#ffffff" letter-spacing="-1">
+      Your next meal,
+    </text>
+    <text x="0" y="245" font-family="Georgia, serif" font-style="italic" font-size="54" font-weight="400" fill="#4ade80" letter-spacing="-1">
+      already planned.
+    </text>
+
+    <!-- Subtitle Description -->
+    <text x="0" y="305" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="20" font-weight="400" fill="#94a3b8">
+      Connecting student portion choices with campus kitchen prep before cooking begins.
+    </text>
+
+    <!-- Stat Pills -->
+    <g transform="translate(0, 360)">
+      <!-- Pill 1 -->
+      <rect x="0" y="0" width="180" height="60" rx="16" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.15"/>
+      <text x="20" y="28" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#ffffff">2 Hours</text>
+      <text x="20" y="47" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#94a3b8">Advance Cutoff</text>
+
+      <!-- Pill 2 -->
+      <rect x="200" y="0" width="190" height="60" rx="16" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.15"/>
+      <text x="220" y="28" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#4ade80">100% Portions</text>
+      <text x="220" y="47" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#94a3b8">Verified Commitments</text>
+
+      <!-- Pill 3 -->
+      <rect x="410" y="0" width="180" height="60" rx="16" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.15"/>
+      <text x="430" y="28" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#facc15">Zero Waste</text>
+      <text x="430" y="47" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" fill="#94a3b8">Guesswork Free</text>
+    </g>
+  </g>
+
+  <!-- Right Side Visual Card -->
+  <g transform="translate(760, 110)">
+    <rect width="340" height="420" rx="28" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.2" filter="drop-shadow(0 20px 40px rgba(0,0,0,0.5))"/>
+    
+    <!-- Dish Emoji / Graphic -->
+    <circle cx="170" cy="140" r="75" fill="#ffffff" fill-opacity="0.08"/>
+    <text x="170" y="165" font-size="80" text-anchor="middle">🥗</text>
+    
+    <!-- Dish Meta -->
+    <text x="35" y="255" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700" fill="#4ade80" letter-spacing="1">GARDEN KITCHEN · 4 MIN WALK</text>
+    <text x="35" y="290" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="700" fill="#ffffff">Harvest grain bowl</text>
+    <text x="35" y="318" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" fill="#94a3b8">Roasted vegetables, rice & tahini.</text>
+    
+    <!-- Pickup Token Badge -->
+    <rect x="35" y="348" width="270" height="42" rx="12" fill="#2457d6" fill-opacity="0.3" stroke="#2457d6" stroke-opacity="0.6"/>
+    <text x="50" y="374" font-family="monospace" font-size="14" font-weight="700" fill="#93c5fd">CODE: MEAL-DEMO</text>
+    <text x="280" y="374" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" fill="#4ade80" text-anchor="end">✓ Ready</text>
+  </g>
+</svg>

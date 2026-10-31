@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f7f3">
+  <title>404 — Meal Not Found · Mealers</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .notfound-container {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .notfound-card {
+      max-width: 540px;
+      padding: 50px 40px;
+      border-radius: 28px;
+    }
+    .notfound-card .dish {
+      font-size: 72px;
+      margin-bottom: 20px;
+      display: inline-block;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+    }
+    .notfound-code {
+      font-family: Georgia, serif;
+      font-size: 64px;
+      font-weight: 400;
+      color: var(--red);
+      line-height: 1;
+      margin: 10px 0;
+    }
+    .notfound-card h1 {
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      margin: 10px 0 16px;
+    }
+    .notfound-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" title="Mealers home">mealers<span>.</span></a>
+    <nav aria-label="Main navigation">
+      <a href="/" class="primary auth-nav-btn" style="text-decoration:none;display:inline-flex">Discover Meals ↗</a>
+    </nav>
+  </header>
+
+  <main class="notfound-container">
+    <div class="notfound-card glass">
+      <span class="dish" aria-hidden="true">🍱</span>
+      <div class="notfound-code">404</div>
+      <h1>This page or meal has left the counter.</h1>
+      <p>The page you are looking for doesn't exist, has been moved, or its cutoff time has passed. Head back to discover nearby campus kitchens.</p>
+      <a href="/" class="primary" style="display:inline-flex;text-decoration:none">
+        <span>Back to Campus Meals</span> <span>↗</span>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <span class="brand small">mealers<span>.</span></span>
+    <p>Thoughtful meal planning, one campus at a time.</p>
+    <span>Concept MVP</span>
+  </footer>
+</body>
+</html>
