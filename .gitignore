@@ -5,3 +5,5 @@ work/
 *.log
 .npm-cache/
 .mongodb-binaries/
+.vercel
+.DS_Store
