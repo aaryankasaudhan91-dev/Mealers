@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (!rawBackend) {
     if (typeof res.status === 'function') {
       res.status(502).json({
-        message: 'BACKEND_URL is not configured in Vercel environment variables. Set BACKEND_URL to your Render backend URL (e.g. https://your-backend.onrender.com).'
+        message: 'BACKEND_URL is not configured in Vercel environment variables. Set BACKEND_URL to your Render backend URL (e.g. https://mealers-backend.onrender.com).'
       });
     } else {
       res.writeHead(502, { 'Content-Type': 'application/json' });
@@ -31,8 +31,29 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Resolve true target path
+  let apiPath = '';
+  if (Array.isArray(req.query?.path)) {
+    apiPath = '/api/' + req.query.path.join('/');
+  } else if (typeof req.query?.path === 'string' && req.query.path) {
+    apiPath = '/api/' + req.query.path.replace(/^\/+/, '');
+  } else {
+    const u = new URL(req.url, 'http://localhost');
+    let p = u.pathname;
+    if (p.includes('[...path]') || p.includes('%5B...path%5D')) {
+      const qp = u.searchParams.get('path');
+      p = qp ? ('/api/' + qp.replace(/^\/+/, '')) : '/api';
+    }
+    apiPath = p.startsWith('/api') ? p : ('/api' + p);
+  }
+
+  const u = new URL(req.url, 'http://localhost');
+  u.searchParams.delete('path');
+  const queryStr = u.search;
+  const fullTargetPath = apiPath + queryStr;
+  const targetUrl = new URL(fullTargetPath, backend);
+
   const client = backend.protocol === 'https:' ? https : http;
-  const targetUrl = new URL(req.url, backend);
 
   const headers = { ...req.headers, host: backend.host };
   delete headers.connection;
@@ -64,30 +85,30 @@ export default async function handler(req, res) {
       resolve();
     });
 
-    proxyReq.on('error', () => {
+    proxyReq.on('error', (err) => {
       if (!res.headersSent) {
         if (typeof res.status === 'function') {
           res.status(502).json({
-            message: 'The kitchen backend service is unreachable. Please verify that your Render backend is running.'
+            message: 'Mealers backend on Render is starting or temporarily unavailable.',
+            details: err.message
           });
         } else {
           res.writeHead(502, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
-            message: 'The kitchen backend service is unreachable. Please verify that your Render backend is running.'
+            message: 'Mealers backend on Render is starting or temporarily unavailable.',
+            details: err.message
           }));
         }
       }
       resolve();
     });
 
-    if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
-      const bodyData = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-      proxyReq.setHeader('Content-Type', req.headers['content-type'] || 'application/json');
-      proxyReq.write(bodyData);
-      proxyReq.end();
-    } else if (typeof req.pipe === 'function') {
+    if (typeof req.pipe === 'function') {
       req.pipe(proxyReq);
+    } else if (req.body) {
+      const data = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      proxyReq.write(data);
+      proxyReq.end();
     } else {
       proxyReq.end();
     }

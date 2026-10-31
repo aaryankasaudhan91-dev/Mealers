@@ -6,10 +6,11 @@
   <meta name="theme-color" content="#f8f7f3">
   <title>404 — Meal Not Found · Mealers</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico">
   <link rel="stylesheet" href="/styles.css">
   <style>
     .notfound-container {
-      min-height: 80vh;
+      min-height: 75vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -18,63 +19,69 @@
       padding: 40px 20px;
     }
     .notfound-card {
-      max-width: 540px;
-      padding: 50px 40px;
+      max-width: 580px;
+      padding: 50px 44px;
       border-radius: 28px;
     }
-    .notfound-card .dish {
-      font-size: 72px;
+    .notfound-logo {
       margin-bottom: 20px;
-      display: inline-block;
-      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+      border-radius: 22px;
+      box-shadow: 0 10px 30px rgba(36,87,214,0.22);
     }
     .notfound-code {
       font-family: Georgia, serif;
-      font-size: 64px;
-      font-weight: 400;
+      font-size: 72px;
+      font-weight: 500;
       color: var(--red);
       line-height: 1;
-      margin: 10px 0;
+      margin: 12px 0;
     }
     .notfound-card h1 {
       font-family: Georgia, serif;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 400;
-      margin: 10px 0 16px;
+      margin: 12px 0 16px;
+      color: #14213d;
     }
     .notfound-card p {
-      font-size: 14px;
+      font-size: 16px;
       color: var(--muted);
-      line-height: 1.6;
-      margin-bottom: 30px;
+      line-height: 1.7;
+      margin-bottom: 32px;
     }
   </style>
 </head>
 <body>
   <header>
-    <a class="brand" href="/" title="Mealers home">mealers<span>.</span></a>
+    <a class="brand" href="/" title="Mealers home">
+      <img src="/logo.svg" alt="Mealers logo" class="brand-logo" width="38" height="38">
+      mealers<span>.</span>
+    </a>
     <nav aria-label="Main navigation">
-      <a href="/" class="primary auth-nav-btn" style="text-decoration:none;display:inline-flex">Discover Meals ↗</a>
+      <a href="/" class="primary auth-nav-btn" style="text-decoration:none;display:inline-flex">Back to Meals ↗</a>
     </nav>
   </header>
 
   <main class="notfound-container">
     <div class="notfound-card glass">
-      <span class="dish" aria-hidden="true">🍱</span>
+      <img src="/logo.svg" alt="Mealers logo" width="84" height="84" class="notfound-logo">
       <div class="notfound-code">404</div>
-      <h1>This page or meal has left the counter.</h1>
-      <p>The page you are looking for doesn't exist, has been moved, or its cutoff time has passed. Head back to discover nearby campus kitchens.</p>
-      <a href="/" class="primary" style="display:inline-flex;text-decoration:none">
-        <span>Back to Campus Meals</span> <span>↗</span>
-      </a>
+      <h1>This meal isn’t on the menu</h1>
+      <p>The campus kitchen page or reservation link you requested doesn’t exist or has moved. Return to the dining menu to plan your next portion.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <a href="/" class="primary" style="text-decoration:none">Explore Menus <span>↓</span></a>
+        <a href="/" class="secondary" style="text-decoration:none">Campus Home ↗</a>
+      </div>
     </div>
   </main>
 
   <footer>
-    <span class="brand small">mealers<span>.</span></span>
+    <span class="brand small">
+      <img src="/logo.svg" alt="Mealers logo" class="brand-logo small" width="24" height="24">
+      mealers<span>.</span>
+    </span>
     <p>Thoughtful meal planning, one campus at a time.</p>
-    <span>Concept MVP</span>
+    <span>Concept MVP · Cloud ready for Vercel & Render</span>
   </footer>
 </body>
 </html>
-

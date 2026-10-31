@@ -61,7 +61,16 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
  async function once(u,key,body,fn){text(key,100);const hash=createHash('sha256').update(JSON.stringify(body)).digest('hex');try{return await transact(async session=>{const old=await col('idempotency').findOne({user_id:u.id,key},{session});if(old){if(old.hash!==hash)fail(409,'This request key was used for a different action.');return old.response;}const result=await fn(session);await col('idempotency').insertOne({user_id:u.id,key,hash,response:result},{session});return result;});}catch(e){if(e.code===11000){const old=await col('idempotency').findOne({user_id:u.id,key});if(old&&old.hash===hash)return old.response;fail(409,'A conflicting booking already exists. Refresh and try again.');}throw e;}}
  async function reserve(u,s,session,previous=null){opened(s);const r=await col('services').updateOne({_id:s._id,remaining:{$gt:0}},{$inc:{remaining:-1}},{session});if(!r.modifiedCount)fail(409,'That meal has just filled up. Please choose another option.');const b={_id:randomUUID(),user_id:u.id,service_id:s._id,status:'confirmed',token:randomBytes(5).toString('hex').toUpperCase(),created:new Date(now()).toISOString(),previous_id:previous};await col('bookings').insertOne(b,{session});await audit(u,previous?'booking_switched':'booking_created',{id:b._id,serviceId:s._id,previous},session);return{id:b._id,token:b.token,message:previous?'Your meal has been switched.':'Your meal is booked.'};}
  const server=http.createServer(async(req,res)=>{
-  const route=new URL(req.url,'http://localhost').pathname,method=req.method;
+  const rawPath=new URL(req.url,'http://localhost').pathname.replace(/\/+$/,'')||'/';
+  let route=rawPath;
+  if(route.includes('[...path]')||route.includes('%5B...path%5D')){
+   const qp=new URL(req.url,'http://localhost').searchParams.get('path');
+   if(qp)route='/api/'+qp.replace(/^\/+/,'').replace(/\/+$/,'');
+  }
+  if(!route.startsWith('/api')&&route!=='/'){
+   route='/api'+route;
+  }
+  const method=req.method;
   const reqOrigin=req.headers.origin;
   const host=req.headers.host;
   const forwardedHost=req.headers['x-forwarded-host'];
@@ -85,7 +94,6 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
    if(!route.startsWith('/api/'))fail(404,'The backend serves API endpoints only.');
    if(route==='/api/health'&&method==='GET')return send(res,db?200:503,{status:db?'ok':'setup_required',database:'mongodb',configured:!!db,demo,message:db?'MongoDB connected':connectionMessage});
    if(route==='/api/session'&&method==='GET'){let u=null;if(db)try{u=await user(req);}catch{}return send(res,200,{user:u,demo,setupRequired:!db,message:db?null:connectionMessage});}
-   if(!db)fail(503,connectionMessage);
    let b={};if(method==='POST'){
     const clientIp=(req.headers['x-forwarded-for']||'').split(',')[0].trim()||req.socket?.remoteAddress||'local';
     checkRateLimit(clientIp);
@@ -98,6 +106,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
    if(route==='/api/analytics'&&method==='POST'){
     return send(res,200,{ok:true});
    }
+   if(!db)fail(503,connectionMessage);
    if(route==='/api/demo/login'&&method==='POST'){
     if(!demo)fail(404,'Demo accounts are disabled.');
     const validDemos=['diner','new-diner','eco-diner','manager','chef'];

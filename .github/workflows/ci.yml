@@ -1,0 +1,81 @@
+name: Mealers CI / CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, Check & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        node-version: [ 20.x, 22.x ]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Workspace Dependencies
+        run: |
+          npm install
+          npm --prefix backend install
+          npm --prefix frontend install
+
+      - name: Run Code Quality & Syntax Checks
+        run: npm run check
+
+      - name: Run Test Suite (with MongoDB Service)
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/mealers_ci
+          NO_MEMORY_SERVER: 'true'
+        run: npm test
+
+      - name: Verify Workspace Build
+        run: npm run build
+
+  deploy-readiness:
+    name: Verify Vercel & Render Deployment Readiness
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Cloud Configurations & Assets
+        run: |
+          test -f vercel.json || (echo "Missing vercel.json" && exit 1)
+          test -f render.yaml || (echo "Missing render.yaml" && exit 1)
+          test -f frontend/public/favicon.svg || (echo "Missing favicon.svg" && exit 1)
+          test -f frontend/public/favicon.ico || (echo "Missing favicon.ico" && exit 1)
+          test -f frontend/public/logo.svg || (echo "Missing logo.svg" && exit 1)
+          test -f frontend/public/social-preview.svg || (echo "Missing social-preview.svg" && exit 1)
+          test -f frontend/public/robots.txt || (echo "Missing robots.txt" && exit 1)
+          test -f frontend/public/sitemap.xml || (echo "Missing sitemap.xml" && exit 1)
+          test -f frontend/public/404.html || (echo "Missing 404.html" && exit 1)
+          echo "All Vercel & Render cloud deployment assets verified successfully."
