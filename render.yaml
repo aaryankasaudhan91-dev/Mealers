@@ -33,3 +33,4 @@ services:
           type: web
           name: mealers-backend
           property: host
+
