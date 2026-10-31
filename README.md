@@ -1,47 +1,43 @@
 # Mealers MVP
 
-A local, functional campus meal-coordination demo. The interface follows the Mealers pitch palette with a minimalist light glass treatment. All people, bookings and menu records are synthetic. No payments, real incentives or measured savings are claimed.
+Mealers is a local campus meal coordination demo with a minimalist light glass interface matching the pitch palette. All identities, records and menus are synthetic. No real payments or measured savings are claimed.
 
-## Run
+## Separate applications
 
-Requires Node.js 24 or newer with `node:sqlite`. No third-party dependencies are needed.
+- `backend/` contains the MongoDB API, database configuration, packages and tests.
+- `frontend/` contains the web interface and its environment-configured API proxy.
+- Each application must be started from its own folder. No root application server is used.
+
+## Your next step
+
+Fill in `MONGODB_URI` in `backend/.env`. Use a dedicated MongoDB Atlas database or local replica set. See `backend/README.md` for connection and database requirements. This is the only missing user configuration; no connection string is embedded in the app.
+
+Start the backend in one terminal:
 
 ```powershell
+cd backend
 npm start
 ```
 
-Open http://localhost:3000. To use a different port, set `$env:PORT` before starting. The server listens only on the local computer. Database files are created in this project’s `data` directory. Stop with Ctrl+C.
+Start the frontend in another terminal:
+
+```powershell
+cd frontend
+npm start
+```
+
+Open http://localhost:3000. The frontend's `BACKEND_URL` comes only from `frontend/.env`. MongoDB credentials remain on the backend. Both servers default to local-only binding through their environment configuration. Database setup creates collections and indexes after the connection is supplied.
 
 ## Demo journey
 
-1. Choose **Alex · diner demo**. Alex already has a Commons Kitchen booking.
-2. Choose an available meal at Garden Kitchen and confirm a voluntary switch. The old booking changes only if the replacement succeeds.
-3. Open **My meals** and note the pickup code.
-4. Choose **Kitchen team demo** and confirm the pickup using that code. Reusing the code is rejected.
-5. Approve a preparation plan, publish a meal or record service totals. View **Insights** and download a synthetic report.
-6. Choose **Sam · new diner demo** to try a fresh booking without a previous reservation.
+Choose Alex's diner demo, switch the existing Commons Kitchen booking to Garden Kitchen and note the pickup code under My meals. Choose the kitchen-team demo and confirm pickup. Approve a preparation plan, publish a meal, record service totals and view the demo report. Sam's diner demo begins with no reservation.
 
-The seed service cutoff is two hours after the database is first created, with pickup three hours after creation. Later, publish fresh services in the kitchen console. Existing database records persist across restarts. Seed data is not automatically reset or overwritten. To start a new synthetic run, stop the server and archive the `data/mealers.sqlite` file before restarting.
+Seed service cutoffs are two hours after initial database setup. Existing data persists. Publish new services once cutoffs expire. The current MVP permits one active meal at a time and one pickup time per service. It does not yet model independently limited pickup slots, real payments, incentives, production users or a multi-day meal calendar.
 
-## Stack and implementation
+## Security notice
 
-The MVP uses browser-native JavaScript and CSS, a Node HTTP API and built-in SQLite. This deliberately keeps installation simple; the earlier architecture document proposed React/FastAPI for a later implementation. Booking availability is enforced in server-side transactions. Idempotency keys prevent duplicate confirmations, and a partial unique index limits diners to one active booking in this limited demo. This MVP models a single active meal at a time rather than a full multi-day meal calendar.
+Demo identities are intentionally switchable and are not production authentication. The warning stays visible in the interface. Use synthetic data only. The backend refuses production mode. A real pilot requires verified identity, production session controls, appropriate data retention, operational monitoring, backups and menu/food-safety processes. No secrets should enter frontend files or source control.
 
-The manager approves preparation quantities. Booking counts include committed reservations, collected meals and late cancellations; late cancellations do not pretend preparation has been avoided. Staff can record an early pickup in the demo, while expired pickups are rejected. Each service currently has a single pickup time rather than multiple independently limited slots. The menu has declared allergens, not a certified food-safety guarantee. Dish thumbnails are emoji; the campus illustration was generated with Imagegen and is not a real pilot photo.
+## Checks
 
-## Verification
-
-```powershell
-npm run check
-npm test
-```
-
-Tests cover last-slot contention, atomic switch rollback, idempotency, access checks, cutoff handling, dietary checks, pickup replay and invalid totals.
-
-## Before a real pilot
-
-Demo accounts are deliberately easy to switch and are not production authentication. The launcher rejects `NODE_ENV=production`. Add real identity and operator assignments, session revocation, rate limiting, pickup-slot modelling, appropriate data retention, stronger audit scoping, monitoring, backup recovery and actual kitchen/menu data before deployment. The report makes no causal savings or carbon claims.
-
-## Project layout
-
-`server.mjs` contains the HTTP API and schema. `public/` contains the interface and concept illustration. `tests/` contains transactional API tests. `data/` stores local runtime state. Nothing needs to install globally.
+Run `npm run check` in each application folder. Run `npm test` in backend for MongoDB transaction integration tests. The earlier SQLite prototype is preserved under backend/legacy for reference only and is not an active fallback.
