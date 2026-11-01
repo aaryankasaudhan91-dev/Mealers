@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "node --watch server.mjs",
     "start": "node server.mjs",
-    "test": "node --test tests/mongo.test.mjs",
-    "check": "node --check mongo-app.mjs && node --check server.mjs"
+    "test": "node --test tests/mongo.test.mjs tests/security.test.mjs",
+    "check": "node --check mongo-app.mjs && node --check server.mjs && node --check security.mjs"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.2.0"

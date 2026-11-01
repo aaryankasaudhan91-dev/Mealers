@@ -20,8 +20,9 @@ export default async function handler(req, res) {
   let backend;
   try {
     backend = new URL(rawBackend);
+    if(!['http:','https:'].includes(backend.protocol)||backend.username||backend.password||backend.pathname!=='/'||backend.search||backend.hash)throw Error('Invalid backend origin');
   } catch (err) {
-    const errorMsg = `Invalid BACKEND_URL configured in Vercel: ${rawBackend}`;
+    const errorMsg = 'Invalid BACKEND_URL. Configure a backend HTTP(S) origin without credentials or paths.';
     if (typeof res.status === 'function') {
       res.status(502).json({ message: errorMsg });
     } else {

@@ -11,20 +11,16 @@ if(existsSync(envPath)&&typeof process.loadEnvFile==='function'){
   try{process.loadEnvFile(envPath);}catch(err){console.warn('Notice: Could not load .env file:',err.message);}
 }
 
-const rawBackend=(process.env.BACKEND_URL||'http://127.0.0.1:3001').trim().replace(/\/api\/?$/,'').replace(/\/+$/,'');
-let backend=null;
-try{
-  backend=new URL(rawBackend);
-  if(!['http:','https:'].includes(backend.protocol)||backend.username||backend.password||backend.search||backend.hash){
-    console.warn('Warning: BACKEND_URL should be an HTTP(S) origin without credentials or queries:',rawBackend);
-  }
-}catch(e){
-  console.warn('Warning: Invalid BACKEND_URL provided:',rawBackend);
-}
+const rawBackend=(process.env.BACKEND_URL||'').trim();
+if(!rawBackend)throw Error('BACKEND_URL is required in frontend/.env or service environment variables.');
+const backend=new URL(rawBackend);
+if(!['http:','https:'].includes(backend.protocol)||backend.username||backend.password||backend.pathname!=='/'||backend.search||backend.hash)throw Error('BACKEND_URL must be an HTTP(S) origin without credentials, paths or queries.');
 
 const port=Number(process.env.PORT)||3000;
 const host=process.env.HOST||'0.0.0.0';
 const types={
+  '.mp4':'video/mp4',
+  '.vtt':'text/vtt; charset=utf-8',
   '.html':'text/html; charset=utf-8',
   '.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8',

@@ -14,7 +14,7 @@ services:
       - key: MONGODB_DATABASE
         value: mealers_demo
       - key: FRONTEND_ORIGIN
-        value: "*"
+        sync: false
       - key: MONGODB_URI
         sync: false
 
@@ -29,8 +29,5 @@ services:
       - key: NODE_ENV
         value: production
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: mealers-backend
-          property: host
+        sync: false
 

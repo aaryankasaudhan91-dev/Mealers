@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f8f7f3">
 
   <!-- SEO & Primary Meta -->
-  <title>Mealers — Planned Campus Meals & Zero-Waste Dining</title>
+  <title>Mealers — Planned Campus Meals & Campus Dining</title>
   <meta name="description" content="Mealers coordinates campus dining by connecting student meal reservations directly to kitchen prep before cooking begins. Browse menus, filter by allergens, and reduce food waste.">
   <meta name="author" content="Mealers">
   <link rel="canonical" href="https://mealers.vercel.app/">
@@ -14,8 +14,8 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mealers.vercel.app/">
-  <meta property="og:title" content="Mealers — Planned Campus Meals & Zero-Waste Dining">
-  <meta property="og:description" content="Browse campus menus, reserve portions in advance, and eliminate cafeteria food waste with Mealers.">
+  <meta property="og:title" content="Mealers — Planned Campus Meals & Campus Dining">
+  <meta property="og:description" content="Browse campus menus, reserve portions in advance, and help kitchens plan before cooking with Mealers.">
   <meta property="og:image" content="/social-preview.svg">
   <meta property="og:site_name" content="Mealers">
 
@@ -23,12 +23,11 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://mealers.vercel.app/">
   <meta name="twitter:title" content="Mealers — Planned Campus Meals">
-  <meta name="twitter:description" content="Browse campus menus, reserve portions in advance, and eliminate cafeteria food waste.">
+  <meta name="twitter:description" content="Browse campus menus, reserve portions in advance, and help kitchens plan before cooking.">
   <meta name="twitter:image" content="/social-preview.svg">
 
   <!-- Favicons & Touch Icons -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/favicon.svg">
 
   <!-- Performance & Preloads -->
@@ -36,10 +35,16 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div id="app"></div>
+  <a class="skip-link" href="#app">Skip to main content</a>
+  <div id="splash" class="splash" role="status" aria-live="polite">
+    <img src="/logo.svg" width="76" height="76" alt="">
+    <strong>mealers<span>.</span></strong><p>Getting your campus meals ready…</p><span class="splash-progress" aria-hidden="true"></span>
+  </div>
+  <noscript><style>.splash{display:none}</style>Mealers needs JavaScript to show live availability. Please enable it and reload.</noscript>
+  <div id="app" tabindex="-1"></div>
   <div id="cookie-banner" role="region" aria-label="Cookie and privacy settings" class="cookie-banner hidden"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <dialog id="dialog"></dialog>
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/bootstrap.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+import {hashPassword,verifyPassword,validPassword} from './security.mjs';
 import http from 'node:http';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 class ApiError extends Error{constructor(status,message){super(message);this.status=status;}}
@@ -25,9 +26,9 @@ export async function initializeDatabase(db,client,{demo=true,now=Date.now}={}){
   await db.collection('users').insertMany(users,{session});await db.collection('services').insertMany(services,{session});await db.collection('bookings').insertMany(bookings,{session});
  });}finally{await session.endSession();}
 }
-export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOrigin='*',connectionMessage='Add MONGODB_URI to backend/.env and restart the backend.'}={}){
+export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOrigin='http://localhost:3000',connectionMessage='Add MONGODB_URI to backend/.env and restart the backend.'}={}){
  const sessions=new Map();const col=name=>db.collection(name);
- const parseOrigins=val=>{if(!val||val==='*')return ['*'];return val.split(',').map(s=>s.trim().replace(/\/$/,'')).filter(Boolean);};
+ const parseOrigins=val=>{if(!val||val==='*')return [];return val.split(',').map(s=>s.trim().replace(/\/$/,'')).filter(Boolean);};
  const allowedList=parseOrigins(allowedOrigin);
  const own=(s,u)=>{if(s.operator_id!==u.operator_id)fail(404,'Meal service not found.');};
  const service=async(id,session)=>{const s=await col('services').findOne({_id:id},{session});if(!s)fail(404,'Meal service not found.');return s;};
@@ -45,7 +46,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
  const user=async req=>{
   const cookieToken=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('mealers_session='))?.slice(16);
   const headerToken=req.headers['authorization']?.startsWith('Bearer ')?req.headers['authorization'].slice(7).trim():req.headers['x-session-token'];
-  const token=cookieToken||headerToken;
+  const token=cookieToken;
   if(!token)fail(401,'Choose a demo account to continue.');
   const s=sessions.get(token);
   if(!s||s.expires<=now())fail(401,'Choose a demo account to continue.');
@@ -74,7 +75,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
   const reqOrigin=req.headers.origin;
   const host=req.headers.host;
   const forwardedHost=req.headers['x-forwarded-host'];
-  const isOriginAllowed=!reqOrigin||allowedList.includes('*')||allowedList.includes(reqOrigin)||(host&&reqOrigin===`http://${host}`)||(host&&reqOrigin===`https://${host}`)||(forwardedHost&&reqOrigin===`https://${forwardedHost}`);
+  const isOriginAllowed=!reqOrigin||allowedList.includes(reqOrigin);
   const corsHeaders={};
   if(reqOrigin&&isOriginAllowed){
    corsHeaders['Access-Control-Allow-Origin']=reqOrigin;
@@ -96,7 +97,7 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
    if(route==='/api/session'&&method==='GET'){let u=null;if(db)try{u=await user(req);}catch{}return send(res,200,{user:u,demo,setupRequired:!db,message:db?null:connectionMessage});}
    let b={};if(method==='POST'){
     const clientIp=(req.headers['x-forwarded-for']||'').split(',')[0].trim()||req.socket?.remoteAddress||'local';
-    checkRateLimit(clientIp);
+    checkRateLimit(req.socket?.remoteAddress||'local');
     if(!(req.headers['content-type']||'').includes('application/json'))fail(415,'JSON content is required.');
     if(req.headers.origin&&!isOriginAllowed)fail(403,'This request did not come from an authorized Mealers origin.');
     let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>20000)fail(413,'Request is too large.');}
@@ -121,13 +122,14 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:u._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,200,{user:sanitizeUser(u)},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=Lax; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/login'&&method==='POST'){
     const rawAccount=(b.account||b.username||b.email||'').trim();
     if(!rawAccount)fail(400,'Please enter your username, email or demo account.');
     const demoAccounts=['diner','new-diner','eco-diner','manager','chef'];
     if(demoAccounts.includes(rawAccount)){
+     if(!demo)fail(404,'Demo accounts are disabled.');
      let u=await col('users').findOne({_id:rawAccount});
      if(!u){
       if(rawAccount==='eco-diner')u={_id:'eco-diner',name:'Jordan · vegetarian diner',role:'diner',operator_id:1,diet:'vegetarian'};
@@ -138,39 +140,37 @@ export function createApp({db=null,client=null,now=Date.now,demo=true,allowedOri
      const token=randomBytes(24).toString('hex');
      sessions.set(token,{id:u._id,expires:now()+28800000});
      const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-     return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+     return send(res,200,{user:sanitizeUser(u)},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=Lax; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
     }
     const u=await col('users').findOne({$or:[{_id:rawAccount.toLowerCase()},{email:rawAccount.toLowerCase()}]});
     if(!u)fail(404,'Account not found. Please register or check your username/email.');
-    if(u.passwordHash){
-     const pass=String(b.password||'');
-     const hash=createHash('sha256').update(pass).digest('hex');
-     if(hash!==u.passwordHash)fail(401,'Incorrect password. Please try again.');
-    }
+    if(!await verifyPassword(String(b.password||''),u.passwordHash))fail(401,'Account or password is incorrect. Older prototype accounts require secure reprovisioning.');
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:u._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,200,{user:sanitizeUser(u),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,200,{user:sanitizeUser(u)},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=Lax; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/register'&&method==='POST'){
     const name=text(b.name||'',80);
     const rawId=text(b.username||b.email||'',80);
-    const userId=rawId.toLowerCase().replace(/[^a-z0-9_.-]/g,'-');
-    if(!userId||userId.length<3)fail(400,'Username must be at least 3 characters.');
+    const userId=rawId.toLowerCase();
+    if(!/^[a-z0-9_-]{3,20}$/.test(userId))fail(400,'Use a username of 3–20 letters, numbers, hyphens or underscores.');
+    if(['diner','new-diner','eco-diner','manager','chef'].includes(userId))fail(409,'This username is reserved.');
+    if(!validPassword(b.password))fail(400,'Use a password of 12–128 characters.');
+    if(b.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email))fail(400,'Enter a valid email address.');
     const email=b.email?text(b.email,120).toLowerCase():`${userId}@campus.demo`;
-    const role=b.role==='manager'?'manager':'diner';
+    if(b.role&&b.role!=='diner')fail(403,'Kitchen roles must be provisioned by your operator.');
+    const role='diner';
     const diet=['vegan','vegetarian','regular','any'].includes(b.diet)?b.diet:'any';
     const existing=await col('users').findOne({$or:[{_id:userId},{email}]});
     if(existing)fail(409,'An account with this username or email already exists.');
     const newUser={_id:userId,name,email,role,diet,operator_id:1,created:new Date(now()).toISOString()};
-    if(b.password&&String(b.password).length>=4){
-     newUser.passwordHash=createHash('sha256').update(String(b.password)).digest('hex');
-    }
+    newUser.passwordHash=await hashPassword(b.password);
     await col('users').insertOne(newUser);
     const token=randomBytes(24).toString('hex');
     sessions.set(token,{id:newUser._id,expires:now()+28800000});
     const isHttps=req.headers['x-forwarded-proto']==='https'||req.socket?.encrypted;
-    return send(res,201,{user:sanitizeUser(newUser),token},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=${isHttps?'None':'Lax'}; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
+    return send(res,201,{user:sanitizeUser(newUser)},{'Set-Cookie':`mealers_session=${token}; HttpOnly; SameSite=Lax; ${isHttps?'Secure; ':''}Path=/; Max-Age=28800`});
    }
    if(route==='/api/logout'&&method==='POST'){const cookieToken=(req.headers.cookie||'').match(/mealers_session=([^;]+)/)?.[1];const headerToken=req.headers['authorization']?.startsWith('Bearer ')?req.headers['authorization'].slice(7).trim():req.headers['x-session-token'];const token=cookieToken||headerToken;if(token)sessions.delete(token);return send(res,200,{ok:true},{'Set-Cookie':'mealers_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'});}
    if(route==='/api/meals'&&method==='GET')return send(res,200,{meals:(await col('services').find({operator_id:1}).sort({_id:1}).toArray()).map(serial),demo});

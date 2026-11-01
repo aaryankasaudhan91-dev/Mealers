@@ -2,9 +2,9 @@ name: Mealers CI / CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, V1 ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, V1 ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,17 +14,6 @@ jobs:
   test:
     name: Lint, Check & Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
-
-    services:
-      mongodb:
-        image: mongo:7.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     strategy:
       matrix:
@@ -38,7 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       - name: Install Workspace Dependencies
         run: |
@@ -49,9 +37,16 @@ jobs:
       - name: Run Code Quality & Syntax Checks
         run: npm run check
 
-      - name: Run Test Suite (with MongoDB Service)
+      - name: Start isolated replica set
+        run: |
+          docker run -d --name mealers-test-db -p 27017:27017 mongo:7.0 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do docker exec mealers-test-db mongosh --quiet --eval 'db.runCommand({ping:1})' && break || sleep 2; done
+          docker exec mealers-test-db mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
+          for i in $(seq 1 30); do docker exec mealers-test-db mongosh --quiet --eval 'if(!db.hello().isWritablePrimary)quit(1)' && break || sleep 2; done
+
+      - name: Run database integration and security tests
         env:
-          MONGODB_URI: mongodb://127.0.0.1:27017/mealers_ci
+          MONGODB_URI: mongodb://127.0.0.1:27017/mealers_ci?replicaSet=rs0&directConnection=true
           NO_MEMORY_SERVER: 'true'
         run: npm test
 

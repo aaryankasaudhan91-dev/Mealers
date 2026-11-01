@@ -36,6 +36,7 @@ before(async()=>{
       // Graceful fallback
     }
   }
+  if(process.env.CI)throw Error('CI requires a working MongoDB replica set; integration tests may not skip.');
   console.log('Notice: Running standalone & simulated test suite.');
   client=null;
   replica=null;
@@ -61,7 +62,7 @@ function dispatch(server,route,options={}){
     req.headers={
       host:'localhost',
       ...(body?{'content-type':'application/json'}:{}),
-      ...headers
+      ...Object.fromEntries(Object.entries(headers).map(([name,value])=>[name.toLowerCase(),value]))
     };
     req.socket={remoteAddress:'127.0.0.1',encrypted:false};
 

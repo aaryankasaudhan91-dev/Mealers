@@ -16,7 +16,7 @@ if(process.env.NODE_ENV==='production'){
 
 const port=Number(process.env.PORT)||3001;
 const host=process.env.HOST||'0.0.0.0';
-const allowedOrigin=process.env.FRONTEND_ORIGIN||'*';
+const allowedOrigin=process.env.FRONTEND_ORIGIN||'http://localhost:3000';
 const name=process.env.MONGODB_DATABASE||'mealers_demo';
 if(!/^[A-Za-z0-9_-]+$/.test(name))throw Error('MONGODB_DATABASE must be an alphanumeric identifier.');
 
@@ -27,7 +27,7 @@ if(process.env.MONGODB_URI?.trim()){
     await client.connect();
     const hello=await client.db('admin').command({hello:1});
     if(!hello.setName&&hello.msg!=='isdbgrid'){
-      console.warn('Notice: MongoDB instance is not a replica set. Transactions require a replica set (Atlas or local).');
+      throw Error('replica_set_required');
     }
     db=client.db(name);
     await initializeDatabase(db,client,{demo:process.env.DEMO_MODE!=='false'});
@@ -39,7 +39,7 @@ if(process.env.MONGODB_URI?.trim()){
     client=null;
     message=e.message==='replica_set_required'
       ?'MongoDB transactions require Atlas or a local replica set. Update MONGODB_URI and restart.'
-      :`MongoDB connection could not be established: ${e.message}. Check MONGODB_URI and network access.`;
+      :'MongoDB connection could not be established. Check backend credentials and network access.';
     console.error(message);
   }
 }else{

@@ -1,215 +1,21 @@
+import {initOnboarding,startOnboarding} from './onboarding.js';
+import {createApi} from './api.js';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state={user:null,tab:'login',authMode:'login',meals:[],bookings:[],diet:'any',avoid:[],maxWalk:15,loading:true},busy=false;
 let scrollyAnimId=null;
 
 
-const DEMO_USERS = {
-  'diner': { id: 'diner', name: 'Alex · Diner', role: 'diner', operator_id: 1 },
-  'new-diner': { id: 'new-diner', name: 'Sam · New Diner', role: 'diner', operator_id: 1 },
-  'eco-diner': { id: 'eco-diner', name: 'Jordan · Vegetarian Diner', role: 'diner', operator_id: 1, diet: 'vegetarian' },
-  'manager': { id: 'manager', name: 'Kitchen Team', role: 'manager', operator_id: 1 },
-  'chef': { id: 'chef', name: 'Elena · Campus Chef', role: 'manager', operator_id: 1 }
-};
-
-const DEFAULT_MEALS = [
-  {
-    id: 1,
-    name: 'Harvest Grain Bowl',
-    kitchen: 'Garden Kitchen',
-    description: 'Roasted seasonal squash, quinoa, steamed kale, chickpeas, and lemon tahini dressing.',
-    diet: 'vegan',
-    allergens: ['sesame'],
-    walk: 4,
-    price: 6.50,
-    capacity: 100,
-    buffer: 15,
-    available: 40,
-    reserved: 45,
-    open: true,
-    cutoff: new Date(Date.now() + 7200000).toISOString(),
-    pickup: new Date(Date.now() + 10800000).toISOString()
-  },
-  {
-    id: 2,
-    name: 'Spiced Lentil & Vegetable Curry',
-    kitchen: 'North Kitchen',
-    description: 'Slow-simmered red lentils with turmeric, ginger, sweet potatoes, and organic basmati rice.',
-    diet: 'vegetarian',
-    allergens: [],
-    walk: 6,
-    price: 5.80,
-    capacity: 80,
-    buffer: 12,
-    available: 22,
-    reserved: 46,
-    open: true,
-    cutoff: new Date(Date.now() + 7200000).toISOString(),
-    pickup: new Date(Date.now() + 10800000).toISOString()
-  },
-  {
-    id: 3,
-    name: 'Grilled Lemon Herb Chicken Bowl',
-    kitchen: 'Commons Kitchen',
-    description: 'Citrus-marinated roasted chicken breast, herbed farro, roasted broccoli, and garlic tzatziki.',
-    diet: 'regular',
-    allergens: ['milk'],
-    walk: 3,
-    price: 7.20,
-    capacity: 120,
-    buffer: 18,
-    available: 55,
-    reserved: 47,
-    open: true,
-    cutoff: new Date(Date.now() + 7200000).toISOString(),
-    pickup: new Date(Date.now() + 10800000).toISOString()
-  }
-];
-
-let memoryBookings = [
-  {
-    id: 'demo-booking-1',
-    user_id: 'diner',
-    service_id: 3,
-    status: 'confirmed',
-    token: 'MEAL-DEMO',
-    created: new Date().toISOString(),
-    meal: DEFAULT_MEALS[2]
-  }
-];
-
-function handleDemoFallback(url, body){
-  if(url === 'analytics') return { ok: true };
-  if(url === 'session'){
-    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('mealers_session') : null;
-    if(token && !state.user){
-      const matchKey = Object.keys(DEMO_USERS).find(k => token.includes(k));
-      if(matchKey) state.user = DEMO_USERS[matchKey];
-    }
-    return { user: state.user, demo: true, setupRequired: false };
-  }
-  if(url === 'meals'){
-    return { meals: (state.meals && state.meals.length) ? state.meals : DEFAULT_MEALS, demo: true };
-  }
-  if(url === 'demo/login' || url === 'login'){
-    const acc = (body?.account || body?.username || 'diner').trim();
-    const u = DEMO_USERS[acc] || { id: acc, name: acc, role: (acc.includes('manager')||acc.includes('chef')) ? 'manager' : 'diner', operator_id: 1 };
-    const token = 'demo-token-' + u.id;
-    return { user: u, token };
-  }
-  if(url === 'register'){
-    const u = { id: body?.username || 'user', name: body?.name || 'Campus Diner', role: body?.role || 'diner', diet: body?.diet || 'any', operator_id: 1 };
-    const token = 'demo-token-' + u.id;
-    return { user: u, token };
-  }
-  if(url === 'logout'){
-    return { ok: true };
-  }
-  if(url === 'bookings' && !body){
-    return { bookings: memoryBookings.filter(b => b.user_id === state.user?.id && b.status === 'confirmed') };
-  }
-  if(url === 'bookings' && body){
-    const meal = (state.meals || DEFAULT_MEALS).find(m => m.id === Number(body.serviceId)) || DEFAULT_MEALS[0];
-    const newB = {
-      id: 'book-' + Date.now(),
-      user_id: state.user?.id || 'diner',
-      service_id: meal.id,
-      status: 'confirmed',
-      token: 'MEAL-' + Math.floor(1000 + Math.random() * 9000),
-      created: new Date().toISOString(),
-      meal
-    };
-    memoryBookings = memoryBookings.filter(b => b.user_id !== state.user?.id);
-    memoryBookings.push(newB);
-    return { id: newB.id, token: newB.token, message: 'Your meal is booked.' };
-  }
-  if(url.includes('/switch')){
-    const targetMeal = (state.meals || DEFAULT_MEALS).find(m => m.id === Number(body?.serviceId)) || DEFAULT_MEALS[0];
-    const newB = {
-      id: 'switch-' + Date.now(),
-      user_id: state.user?.id || 'diner',
-      service_id: targetMeal.id,
-      status: 'confirmed',
-      token: 'MEAL-' + Math.floor(1000 + Math.random() * 9000),
-      created: new Date().toISOString(),
-      meal: targetMeal
-    };
-    memoryBookings = memoryBookings.filter(b => b.user_id !== state.user?.id);
-    memoryBookings.push(newB);
-    return { id: newB.id, token: newB.token, message: 'Your meal has been switched.' };
-  }
-  if(url.includes('/cancel')){
-    memoryBookings = memoryBookings.filter(b => b.user_id !== state.user?.id);
-    return { message: 'Booking cancelled. The slot is available again.' };
-  }
-  if(url === 'pickups'){
-    return { message: 'Pickup confirmed for ' + (body?.token || 'MEAL-DEMO') + '. This portion is recorded.' };
-  }
-  if(url.includes('/plan') || url.includes('/reconcile')){
-    return { message: 'Preparation plan updated successfully.' };
-  }
-  if(url === 'services' && body){
-    const newMeal = {
-      id: Date.now(),
-      name: body.name || 'Special Bowl',
-      kitchen: body.kitchen || 'Campus Kitchen',
-      description: body.description || '',
-      diet: body.diet || 'regular',
-      allergens: body.allergens || [],
-      walk: Number(body.walk) || 5,
-      price: (Number(body.price) || 600) / 100,
-      capacity: Number(body.capacity) || 100,
-      buffer: Number(body.buffer) || 15,
-      available: (Number(body.capacity) || 100) - (Number(body.buffer) || 15),
-      reserved: 0,
-      open: true,
-      cutoff: body.cutoff || new Date(Date.now() + 7200000).toISOString(),
-      pickup: body.pickup || new Date(Date.now() + 10800000).toISOString()
-    };
-    if(!state.meals) state.meals = [...DEFAULT_MEALS];
-    state.meals.push(newMeal);
-    return { message: 'Meal service published successfully.' };
-  }
-  if(url === 'report'){
-    return {
-      counts: [{status: 'confirmed', n: memoryBookings.length}],
-      served: 52,
-      unused: 2,
-      switched: 1,
-      reportedServices: 3,
-      demo: true
-    };
-  }
-  return null;
-}
-
-async function api(url,body){
-  const token=typeof sessionStorage!=='undefined'?sessionStorage.getItem('mealers_session'):null;
-  const headers={...(body?{'Content-Type':'application/json'}:{}),...(token?{'Authorization':`Bearer ${token}`,'x-session-token':token}:{})};
-  try{
-    const r=await fetch('/api/'+url,{credentials:'include',...(body?{method:'POST',headers,body:JSON.stringify(body)}:{headers})});
-    if(r.ok){
-      return await r.json();
-    }
-    const fallback=handleDemoFallback(url,body);
-    if(fallback!==null)return fallback;
-    const d=await r.json().catch(()=>({}));
-    throw Error(d.message||'Request failed');
-  }catch(err){
-    const fallback=handleDemoFallback(url,body);
-    if(fallback!==null)return fallback;
-    throw err;
-  }
-}
+const api = createApi();
 
 function toast(s){$('#toast').textContent=s;$('#toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').classList.remove('show'),4500);}
-const time=s=>new Date(s).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const time=s=>new Date(s).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
 const active=()=>state.bookings.find(b=>b.status==='confirmed');
 const eligible=m=>(state.diet==='any'||m.diet===state.diet||(state.diet==='vegetarian'&&m.diet==='vegan'))&&!state.avoid.some(a=>m.allergens.includes(a))&&m.walk<=state.maxWalk;
 
 function trackEvent(name, data={}){
   const consent = typeof localStorage !== 'undefined' ? localStorage.getItem('mealers_cookie_consent') : null;
-  if(consent === 'essential') return;
+  if(consent !== 'all') return;
   try{
     const payload = JSON.stringify({
       event: name,
@@ -266,6 +72,7 @@ function initCookieBanner(){
 
 async function refresh(){
   state.loading=true;
+  state.error='';
   try{
     const session=await api('session');
     state.user=session.user;
@@ -274,10 +81,14 @@ async function refresh(){
     state.bookings=state.user?(await api('bookings')).bookings:[];
     if(!state.user && state.tab!=='about') state.tab='login';
   }catch(e){
+    state.error=e.message;
+    if(e.status===401){state.user=null;state.bookings=[];state.tab='login';}
     toast(e.message);
   }
   state.loading=false;
   await render();
+  document.getElementById('splash')?.remove();
+  if(!state.error)initOnboarding();
 }
 
 function shell(content){
@@ -294,7 +105,7 @@ function shell(content){
       ${navLinks.map(([k,v])=>`<button data-tab="${k}" class="${state.tab===k?'selected':''}">${v}</button>`).join('')}
     </nav>
     <div class="account">
-      <span class="campus">Sample campus</span>
+      <span class="campus">Sample campus</span><button class="text-button" id="show-tour">Quick tour</button>
       ${state.user ? `
         <div class="user-pill">
           <span class="user-name">${esc(state.user.name)}</span>
@@ -319,6 +130,7 @@ function shell(content){
       <span class="demo-note">Synthetic data · No real orders or payments</span>
     </div>
     ${state.setupRequired?'<aside class="setup-notice">Demo database is not connected. Meal booking will become available when database setup is complete.</aside>':''}
+    ${state.error?`<aside class="connection-error" role="alert"><strong>We could not refresh your information</strong><p>${esc(state.error)}</p><button class="secondary" id="retry-load">Try again</button></aside>`:''}
     ${content}
     <aside class="security-notice">
       <strong>Security notice</strong> Demo accounts are switchable. Use synthetic data only. Real authentication and operational checks are required before a live pilot.
@@ -410,7 +222,7 @@ function explore(){
         <span class="eyebrow">NEARBY KITCHENS</span>
         <h2>A meal that fits your day</h2>
       </div>
-      <p>${meals.length} options · Manager-approved menus</p>
+      <p>${meals.length} ${meals.length===1?'option':'options'} · Manager-approved menus</p>
     </div>
     <div class="filters glass">
       <label>Meal preference
@@ -433,9 +245,20 @@ function explore(){
       </label>
       <span class="filter-help">Choose what works for you.<br>Always confirm dietary needs with staff.</span>
     </div>
+    ${state.meals.length&&!state.meals.some(m=>m.open)?`<aside class="service-notice"><strong>Booking has closed for these services</strong><p>Your existing booking is still listed under My meals. New reservations open when the kitchen publishes its next service.</p></aside>`:''}
     <div class="meal-grid">
       ${meals.map(mealCard).join('')||'<div class="empty glass"><h3>No matching meals</h3><p>Try a different walking distance or meal preference.</p></div>'}
     </div>
+  </section>
+  <section class="explainer glass" aria-label="Mealers explained">
+    <span class="eyebrow">WATCH THE WORKFLOW</span><h2>A clearer lunch plan in 20 seconds</h2>
+    <p>See how diners choose, confirm and collect while kitchen teams keep control of preparation.</p>
+    <video controls playsinline preload="none" poster="/media/mealers-explainer.jpg" aria-label="Mealers workflow explainer">
+      <source src="/media/mealers-explainer.mp4" type="video/mp4">
+      <track kind="captions" src="/media/mealers-explainer.vtt" srclang="en" label="English" default>
+      Your browser cannot play this video.
+    </video>
+    <p class="field-hint">Concept illustration and synthetic demonstration. No measured savings are claimed. <a href="/media/mealers-explainer.mp4">Open the video</a></p>
   </section>
   <section class="how">
     <span class="eyebrow">SIMPLE BY DESIGN</span>
@@ -569,11 +392,21 @@ async function report(){
 function about(){
   return `
   <div class="page-heading">
-    <span class="eyebrow">3D INTERACTIVE STORY</span>
+    <span class="eyebrow">CONFIRMED DEMAND, BEFORE COOKING</span>
     <h1>About Mealers</h1>
-    <p>Scroll down to experience how advance coordination eliminates campus meal guesswork.</p>
+    <p>Help nearby kitchens plan around the meals diners actually choose.</p>
   </div>
 
+  <section class="business-story glass" aria-label="The Mealers business advantage">
+    <h2>One caterer. Nearby kitchens. A clearer lunch plan.</h2>
+    <p>A caterer may have spare capacity at one cafeteria and excess requests at another. Mealers lets diners voluntarily choose a suitable alternative before preparation closes.</p>
+    <div class="business-points">
+      <article><h3>For the operator</h3><p>See committed demand across participating kitchens. Managers retain control of preparation and walk-in buffers.</p></article>
+      <article><h3>For the diner</h3><p>Choose a meal by location, declared dietary information and pickup time. Confirm explicitly; a failed switch keeps the original booking.</p></article>
+      <article><h3>The business test</h3><p>A subscription per participating kitchen is the proposed model. A pilot must show avoided preparation costs exceed software cost and extra staff effort, without worse shortages.</p></article>
+    </div>
+    <p class="business-caveat">Forecasting and pre-order tools already exist. Cross-kitchen coordination is our focus to validate, not a proven unique advantage. No customers, revenue or measured savings are claimed. The story below is illustrative.</p>
+  </section>
   <div class="scrolly-wrapper">
     <!-- Sticky 3D Interactive Stage -->
     <div class="scrolly-stage glass" id="scrolly-stage">
@@ -589,7 +422,7 @@ function about(){
               <div class="dilemma-box">
                 <span class="dish">🗑️</span>
                 <strong>Over-Prep Waste</strong>
-                <span>Cooking blind batches creates up to 35% surplus food that ends up discarded.</span>
+                <span>Preparing without reliable demand can leave surplus portions; the scale needs measurement in a pilot.</span>
               </div>
               <div class="vs-divider">VS</div>
               <div class="dilemma-box">
@@ -662,7 +495,7 @@ function about(){
               </div>
               <div class="sim-results">
                 <div class="sim-metric">
-                  <strong id="meals-saved">135</strong>
+                  <strong id="meals-saved">Not measured</strong>
                   <span>Meals Saved / Day</span>
                 </div>
                 <div class="sim-metric">
@@ -670,7 +503,7 @@ function about(){
                   <span>CO₂ Avoided / Day</span>
                 </div>
                 <div class="sim-metric">
-                  <strong id="dollars-saved">S$875</strong>
+                  <strong id="dollars-saved">Not measured</strong>
                   <span>Ingredient Value Kept</span>
                 </div>
               </div>
@@ -828,9 +661,9 @@ function initScrollytelling(){
     const updateSim=()=>{
       const val=Number(slider.value);
       if($('#diner-val'))$('#diner-val').textContent=val;
-      if($('#meals-saved'))$('#meals-saved').textContent=Math.round(val*0.27);
+      if($('#meals-saved'))$('#meals-saved').textContent='Not measured';
       if($('#co2-avoided'))$('#co2-avoided').textContent=Math.round(val*0.27*2.5)+' kg';
-      if($('#dollars-saved'))$('#dollars-saved').textContent='S$'+Math.round(val*0.27*6.5);
+      if($('#dollars-saved'))$('#dollars-saved').textContent='Not measured';
     };
     slider.oninput=updateSim;
     updateSim();
@@ -1011,13 +844,7 @@ function loginView(){
           <input id="reg-email" name="email" type="email" placeholder="e.g. maya@campus.edu" autocomplete="email">
           <span class="field-error" id="reg-email-error" aria-live="polite"></span>
         </div>
-        <div class="form-group">
-          <label for="reg-role">Role on Campus</label>
-          <select id="reg-role" name="role">
-            <option value="diner">Diner (Student / Staff eating on campus)</option>
-            <option value="manager">Kitchen Team (Menu publishing & pickups)</option>
-          </select>
-        </div>
+        <p class="field-hint">New accounts are diners. Kitchen access must be provisioned by your operator.</p>
         <div class="form-group">
           <label for="reg-diet">Dietary Preference</label>
           <select id="reg-diet" name="diet">
@@ -1029,7 +856,7 @@ function loginView(){
         </div>
         <div class="form-group">
           <label for="reg-password">Password</label>
-          <input id="reg-password" name="password" type="password" placeholder="At least 4 characters" minlength="4" required autocomplete="new-password">
+          <input id="reg-password" name="password" type="password" placeholder="At least 12 characters" minlength="12" maxlength="128" required autocomplete="new-password">
           <span class="field-error" id="reg-password-error" aria-live="polite"></span>
         </div>
         <p id="auth-error" class="error-msg" role="alert"></p>
@@ -1045,7 +872,9 @@ function loginView(){
   `;
 }
 
+let renderVersion=0;
 async function render(){
+  const version=++renderVersion;
   if(scrollyAnimId){
     cancelAnimationFrame(scrollyAnimId);
     scrollyAnimId=null;
@@ -1062,15 +891,11 @@ async function render(){
   }catch(e){
     content=`<div class="empty glass"><h2>${esc(e.message)}</h2><button class="primary" data-tab="explore">Back to meals</button></div>`;
   }
+  if(version!==renderVersion)return;
   $('#app').innerHTML=shell(content);
   bind();
   initCookieBanner();
-  if(state.tab==='about'){
-    initScrollytelling();
-  }
-  if(state.tab==='about'){
-    initScrollytelling();
-  }
+  if(state.tab==='about'){initScrollytelling();}
 }
 
 function modal(title,html,submit){
@@ -1103,13 +928,15 @@ function modal(title,html,submit){
       $('#modal-error').textContent=err.message;
     }finally{
       busy=false;
-      $('#modal-submit').disabled=false;
+      const submitButton=$('#modal-submit');if(submitButton)submitButton.disabled=false;
     }
   };
   d.showModal();
 }
 
 function bind(){
+  if($('#show-tour'))$('#show-tour').onclick=startOnboarding;
+  if($('#retry-load'))$('#retry-load').onclick=()=>refresh();
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
     state.tab=b.dataset.tab;
     trackEvent('tab_view',{tab:state.tab});
@@ -1144,7 +971,6 @@ function bind(){
   if($('#logout-btn'))$('#logout-btn').onclick=async()=>{
     try{
       await api('logout',{});
-      if(typeof sessionStorage!=='undefined')sessionStorage.removeItem('mealers_session');
       trackEvent('user_logout');
       state.user=null;
       state.bookings=[];
@@ -1159,10 +985,11 @@ function bind(){
   document.querySelectorAll('[data-demo-login]').forEach(b=>{
     b.onclick=async e=>{
       e.stopPropagation();
+      if(b.disabled)return;
+      b.disabled=true;
       const account=b.dataset.demoLogin;
       try{
         const res=await api('demo/login',{account});
-        if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
         state.user=res.user;
         state.tab=res.user.role==='manager'?'kitchen':'explore';
         trackEvent('demo_login',{account});
@@ -1170,7 +997,7 @@ function bind(){
         await refresh();
       }catch(err){
         toast(err.message);
-      }
+      }finally{b.disabled=false;}
     };
   });
 
@@ -1212,7 +1039,6 @@ function bind(){
     btn.disabled=true;
     try{
       const res=await api('login',{account,password:fd.get('password'),_hp_campus:fd.get('_hp_campus')});
-      if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
       state.user=res.user;
       state.tab=res.user.role==='manager'?'kitchen':'explore';
       trackEvent('user_login',{role:res.user.role});
@@ -1260,9 +1086,9 @@ function bind(){
       $('#reg-email')?.classList.add('input-invalid');
       hasErr=true;
     }
-    if(!password||password.length<4){
+    if(!password||password.length<12||password.length>128){
       const el=$('#reg-password-error');
-      if(el){el.textContent='Password must be at least 4 characters long.';el.classList.add('show');}
+      if(el){el.textContent='Use 12–128 characters for your password.';el.classList.add('show');}
       $('#reg-password')?.classList.add('input-invalid');
       hasErr=true;
     }
@@ -1279,12 +1105,11 @@ function bind(){
         name,
         username,
         email,
-        role:fd.get('role'),
+        role:'diner',
         diet:fd.get('diet'),
         password,
         _hp_campus:fd.get('_hp_campus')
       });
-      if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
       state.user=res.user;
       state.tab=res.user.role==='manager'?'kitchen':'explore';
       trackEvent('user_register',{role:res.user.role,diet:res.user.diet});
@@ -1300,13 +1125,11 @@ function bind(){
     try{
       if(!e.target.value){
         await api('logout',{});
-        if(typeof sessionStorage!=='undefined')sessionStorage.removeItem('mealers_session');
         state.user=null;
         state.bookings=[];
         state.tab='explore';
       }else{
         const res=await api('demo/login',{account:e.target.value});
-        if(res?.token&&typeof sessionStorage!=='undefined')sessionStorage.setItem('mealers_session',res.token);
         state.user=res.user;
         state.tab=res.user.role==='manager'?'kitchen':'explore';
         toast(`Switched to ${res.user.name}`);
