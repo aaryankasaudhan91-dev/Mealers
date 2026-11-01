@@ -35,6 +35,8 @@ npm start
 
 ## Collections and rules
 
+All meal prices use Indian rupees (INR). Database and service-publication API prices are integer paise (100 paise = ₹1); meal responses expose rupees for display. Existing numeric prices are preserved; no exchange-rate conversion is applied.
+
 Startup creates `users`, `services`, `bookings`, `idempotency` and `auditEvents`. The first three collections receive basic schema validators on creation. Indexes enforce one active booking per diner, unique pickup codes and unique request keys. Service capacity changes, switches, cancellations and pickups use MongoDB transactions.
 
 With `DEMO_MODE=true`, the app seeds synthetic sample records only if the users collection is empty.

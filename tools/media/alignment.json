@@ -1,0 +1,961 @@
+{
+  "source": "assets/speech.mp3",
+  "method": "faster-whisper tiny.en; corrections checked against supplied narration brief",
+  "listening_review": "not_performed",
+  "words": [
+    {
+      "start": 0.0,
+      "end": 0.46,
+      "word": "Campus",
+      "probability": 0.5940054059028625
+    },
+    {
+      "start": 0.46,
+      "end": 0.7,
+      "word": "lunch",
+      "probability": 0.9047119617462158
+    },
+    {
+      "start": 0.7,
+      "end": 0.94,
+      "word": "should",
+      "probability": 0.9968771934509277
+    },
+    {
+      "start": 0.94,
+      "end": 1.12,
+      "word": "be",
+      "probability": 0.9978048205375671
+    },
+    {
+      "start": 1.12,
+      "end": 1.64,
+      "word": "simple,",
+      "probability": 0.9976621866226196
+    },
+    {
+      "start": 2.1,
+      "end": 2.18,
+      "word": "but",
+      "probability": 0.9896601438522339
+    },
+    {
+      "start": 2.18,
+      "end": 2.5,
+      "word": "kitchens",
+      "probability": 0.9805324673652649
+    },
+    {
+      "start": 2.5,
+      "end": 3.06,
+      "word": "often",
+      "probability": 0.9959461092948914
+    },
+    {
+      "start": 3.06,
+      "end": 3.42,
+      "word": "prepare",
+      "probability": 0.9696089625358582
+    },
+    {
+      "start": 3.42,
+      "end": 3.76,
+      "word": "before",
+      "probability": 0.9955980181694031
+    },
+    {
+      "start": 3.76,
+      "end": 3.96,
+      "word": "they",
+      "probability": 0.7573789954185486
+    },
+    {
+      "start": 3.96,
+      "end": 4.12,
+      "word": "know",
+      "probability": 0.9941818118095398
+    },
+    {
+      "start": 4.12,
+      "end": 4.32,
+      "word": "where",
+      "probability": 0.9938296675682068
+    },
+    {
+      "start": 4.32,
+      "end": 4.58,
+      "word": "people",
+      "probability": 0.9960624575614929
+    },
+    {
+      "start": 4.58,
+      "end": 4.86,
+      "word": "will",
+      "probability": 0.989694356918335
+    },
+    {
+      "start": 4.86,
+      "end": 5.58,
+      "word": "eat.",
+      "probability": 0.9993590712547302
+    },
+    {
+      "start": 5.92,
+      "end": 6.22,
+      "word": "Mealers",
+      "probability": 0.4164231759496033
+    },
+    {
+      "start": 6.22,
+      "end": 6.68,
+      "word": "helps,",
+      "probability": 0.9601450562477112
+    },
+    {
+      "start": 6.98,
+      "end": 7.26,
+      "word": "one",
+      "probability": 0.7395675778388977
+    },
+    {
+      "start": 7.26,
+      "end": 7.86,
+      "word": "caterer,",
+      "probability": 0.463381124039491
+    },
+    {
+      "start": 8.14,
+      "end": 8.44,
+      "word": "coordinate",
+      "probability": 0.9314808249473572
+    },
+    {
+      "start": 8.44,
+      "end": 9.02,
+      "word": "choices",
+      "probability": 0.9945259690284729
+    },
+    {
+      "start": 9.02,
+      "end": 9.86,
+      "word": "across",
+      "probability": 0.9855889678001404
+    },
+    {
+      "start": 9.86,
+      "end": 10.26,
+      "word": "nearby",
+      "probability": 0.9492023587226868
+    },
+    {
+      "start": 10.26,
+      "end": 10.68,
+      "word": "campus",
+      "probability": 0.4071912467479706
+    },
+    {
+      "start": 10.68,
+      "end": 11.08,
+      "word": "kitchens",
+      "probability": 0.9962537288665771
+    },
+    {
+      "start": 11.08,
+      "end": 11.72,
+      "word": "before",
+      "probability": 0.8503996133804321
+    },
+    {
+      "start": 11.72,
+      "end": 12.04,
+      "word": "cooking",
+      "probability": 0.9967741370201111
+    },
+    {
+      "start": 12.04,
+      "end": 12.48,
+      "word": "begins.",
+      "probability": 0.9893901944160461
+    },
+    {
+      "start": 13.08,
+      "end": 13.26,
+      "word": "A",
+      "probability": 0.823665976524353
+    },
+    {
+      "start": 13.26,
+      "end": 13.38,
+      "word": "diner",
+      "probability": 0.9318947196006775
+    },
+    {
+      "start": 13.38,
+      "end": 13.78,
+      "word": "checks",
+      "probability": 0.9913434982299805
+    },
+    {
+      "start": 13.78,
+      "end": 14.02,
+      "word": "the",
+      "probability": 0.9878455996513367
+    },
+    {
+      "start": 14.02,
+      "end": 14.26,
+      "word": "meal,",
+      "probability": 0.9885005950927734
+    },
+    {
+      "start": 14.64,
+      "end": 14.74,
+      "word": "walking",
+      "probability": 0.9563918709754944
+    },
+    {
+      "start": 14.74,
+      "end": 15.24,
+      "word": "distance,",
+      "probability": 0.9902780652046204
+    },
+    {
+      "start": 15.7,
+      "end": 15.92,
+      "word": "and",
+      "probability": 0.9974241256713867
+    },
+    {
+      "start": 15.92,
+      "end": 16.16,
+      "word": "declared",
+      "probability": 0.9962611794471741
+    },
+    {
+      "start": 16.16,
+      "end": 16.78,
+      "word": "allergens,",
+      "probability": 0.862905353307724
+    },
+    {
+      "start": 17.08,
+      "end": 17.3,
+      "word": "then",
+      "probability": 0.9926531314849854
+    },
+    {
+      "start": 17.3,
+      "end": 17.66,
+      "word": "confirms",
+      "probability": 0.958317220211029
+    },
+    {
+      "start": 17.66,
+      "end": 17.94,
+      "word": "a",
+      "probability": 0.9854748249053955
+    },
+    {
+      "start": 17.94,
+      "end": 18.16,
+      "word": "suitable",
+      "probability": 0.998357355594635
+    },
+    {
+      "start": 18.16,
+      "end": 18.54,
+      "word": "option.",
+      "probability": 0.9977124929428101
+    },
+    {
+      "start": 18.9,
+      "end": 19.06,
+      "word": "At",
+      "probability": 0.612693190574646
+    },
+    {
+      "start": 19.06,
+      "end": 19.38,
+      "word": "pickup,",
+      "probability": 0.3837955594062805
+    },
+    {
+      "start": 19.72,
+      "end": 19.94,
+      "word": "staff",
+      "probability": 0.9438250064849854
+    },
+    {
+      "start": 19.94,
+      "end": 20.32,
+      "word": "validate",
+      "probability": 0.8293612003326416
+    },
+    {
+      "start": 20.32,
+      "end": 20.66,
+      "word": "the",
+      "probability": 0.9944120049476624
+    },
+    {
+      "start": 20.66,
+      "end": 20.86,
+      "word": "booking",
+      "probability": 0.986211895942688
+    },
+    {
+      "start": 20.86,
+      "end": 21.24,
+      "word": "code.",
+      "probability": 0.9583365321159363
+    },
+    {
+      "start": 21.86,
+      "end": 21.86,
+      "word": "Kitchen",
+      "probability": 0.9588945508003235
+    },
+    {
+      "start": 21.86,
+      "end": 22.26,
+      "word": "managers",
+      "probability": 0.8802204132080078
+    },
+    {
+      "start": 22.26,
+      "end": 22.74,
+      "word": "see",
+      "probability": 0.8216086030006409
+    },
+    {
+      "start": 22.74,
+      "end": 23.04,
+      "word": "committed",
+      "probability": 0.8332188129425049
+    },
+    {
+      "start": 23.04,
+      "end": 23.52,
+      "word": "demand,",
+      "probability": 0.9892765283584595
+    },
+    {
+      "start": 23.82,
+      "end": 24.08,
+      "word": "protect",
+      "probability": 0.9894644021987915
+    },
+    {
+      "start": 24.08,
+      "end": 24.32,
+      "word": "a",
+      "probability": 0.9691181182861328
+    },
+    {
+      "start": 24.32,
+      "end": 24.66,
+      "word": "walk-in",
+      "probability": 0.78718501329422
+    },
+    {
+      "start": 24.66,
+      "end": 24.9,
+      "word": "buffer,",
+      "probability": 0.9804394841194153
+    },
+    {
+      "start": 25.14,
+      "end": 25.44,
+      "word": "and",
+      "probability": 0.9991564750671387
+    },
+    {
+      "start": 25.44,
+      "end": 25.76,
+      "word": "approve",
+      "probability": 0.9413518905639648
+    },
+    {
+      "start": 25.76,
+      "end": 26.28,
+      "word": "preparation",
+      "probability": 0.9970501661300659
+    },
+    {
+      "start": 26.28,
+      "end": 26.8,
+      "word": "quantities.",
+      "probability": 0.9958527088165283
+    },
+    {
+      "start": 26.8,
+      "end": 27.38,
+      "word": "They",
+      "probability": 0.2603726387023926
+    },
+    {
+      "start": 27.38,
+      "end": 27.78,
+      "word": "record",
+      "probability": 0.9495745301246643
+    },
+    {
+      "start": 27.78,
+      "end": 28.32,
+      "word": "collection",
+      "probability": 0.9312065839767456
+    },
+    {
+      "start": 28.32,
+      "end": 28.62,
+      "word": "and",
+      "probability": 0.9830771088600159
+    },
+    {
+      "start": 28.62,
+      "end": 29.34,
+      "word": "leftovers",
+      "probability": 0.611762598156929
+    },
+    {
+      "start": 29.34,
+      "end": 30.14,
+      "word": "separately.",
+      "probability": 0.9784693717956543
+    },
+    {
+      "start": 30.6,
+      "end": 30.62,
+      "word": "Who",
+      "probability": 0.3219870626926422
+    },
+    {
+      "start": 30.62,
+      "end": 31.14,
+      "word": "pays?",
+      "probability": 0.9837543368339539
+    },
+    {
+      "start": 31.96,
+      "end": 32.06,
+      "word": "Our",
+      "probability": 0.9020360708236694
+    },
+    {
+      "start": 32.06,
+      "end": 32.52,
+      "word": "proposed",
+      "probability": 0.9335370659828186
+    },
+    {
+      "start": 32.52,
+      "end": 33.0,
+      "word": "customer",
+      "probability": 0.9804313778877258
+    },
+    {
+      "start": 33.0,
+      "end": 33.48,
+      "word": "is",
+      "probability": 0.9930965304374695
+    },
+    {
+      "start": 33.48,
+      "end": 33.8,
+      "word": "the",
+      "probability": 0.9947891235351562
+    },
+    {
+      "start": 33.8,
+      "end": 33.96,
+      "word": "campus",
+      "probability": 0.2446315586566925
+    },
+    {
+      "start": 33.96,
+      "end": 34.5,
+      "word": "caterer.",
+      "probability": 0.4564635356267293
+    },
+    {
+      "start": 35.08,
+      "end": 35.08,
+      "word": "The",
+      "probability": 0.97714763879776
+    },
+    {
+      "start": 35.08,
+      "end": 35.42,
+      "word": "business",
+      "probability": 0.9281787872314453
+    },
+    {
+      "start": 35.42,
+      "end": 35.66,
+      "word": "model",
+      "probability": 0.9989140033721924
+    },
+    {
+      "start": 35.66,
+      "end": 36.0,
+      "word": "is",
+      "probability": 0.9973369240760803
+    },
+    {
+      "start": 36.0,
+      "end": 36.18,
+      "word": "a",
+      "probability": 0.9852439165115356
+    },
+    {
+      "start": 36.18,
+      "end": 36.38,
+      "word": "monthly",
+      "probability": 0.9962887763977051
+    },
+    {
+      "start": 36.38,
+      "end": 37.02,
+      "word": "subscription",
+      "probability": 0.9982695579528809
+    },
+    {
+      "start": 37.02,
+      "end": 37.22,
+      "word": "per",
+      "probability": 0.5043631196022034
+    },
+    {
+      "start": 37.22,
+      "end": 37.64,
+      "word": "kitchen.",
+      "probability": 0.9667420387268066
+    },
+    {
+      "start": 38.32,
+      "end": 38.88,
+      "word": "Priced",
+      "probability": 0.2694484144449234
+    },
+    {
+      "start": 38.88,
+      "end": 38.98,
+      "word": "in",
+      "probability": 0.44417014718055725
+    },
+    {
+      "start": 38.98,
+      "end": 39.42,
+      "word": "rupees.",
+      "probability": 0.49958023242652416
+    },
+    {
+      "start": 40.02,
+      "end": 40.1,
+      "word": "The",
+      "probability": 0.9704529643058777
+    },
+    {
+      "start": 40.1,
+      "end": 40.4,
+      "word": "price",
+      "probability": 0.8892045617103577
+    },
+    {
+      "start": 40.4,
+      "end": 40.62,
+      "word": "still",
+      "probability": 0.9450544714927673
+    },
+    {
+      "start": 40.62,
+      "end": 40.9,
+      "word": "needs",
+      "probability": 0.8931867480278015
+    },
+    {
+      "start": 40.9,
+      "end": 41.56,
+      "word": "validation.",
+      "probability": 0.9887534379959106
+    },
+    {
+      "start": 42.3,
+      "end": 42.68,
+      "word": "Forecasting",
+      "probability": 0.49242864549160004
+    },
+    {
+      "start": 42.68,
+      "end": 43.08,
+      "word": "and",
+      "probability": 0.9299941062927246
+    },
+    {
+      "start": 43.08,
+      "end": 43.5,
+      "word": "pre-order",
+      "probability": 0.9942789077758789
+    },
+    {
+      "start": 43.5,
+      "end": 44.0,
+      "word": "tools",
+      "probability": 0.9931198358535767
+    },
+    {
+      "start": 44.0,
+      "end": 44.4,
+      "word": "already",
+      "probability": 0.9937572479248047
+    },
+    {
+      "start": 44.4,
+      "end": 45.12,
+      "word": "exist.",
+      "probability": 0.8696938157081604
+    },
+    {
+      "start": 45.72,
+      "end": 45.84,
+      "word": "Our",
+      "probability": 0.991719126701355
+    },
+    {
+      "start": 45.84,
+      "end": 46.04,
+      "word": "focus",
+      "probability": 0.9799275398254395
+    },
+    {
+      "start": 46.04,
+      "end": 46.4,
+      "word": "is",
+      "probability": 0.9826313853263855
+    },
+    {
+      "start": 46.4,
+      "end": 46.78,
+      "word": "voluntary",
+      "probability": 0.9536773562431335
+    },
+    {
+      "start": 46.78,
+      "end": 47.5,
+      "word": "coordination",
+      "probability": 0.9897789359092712
+    },
+    {
+      "start": 47.5,
+      "end": 48.04,
+      "word": "between",
+      "probability": 0.9981085062026978
+    },
+    {
+      "start": 48.04,
+      "end": 48.36,
+      "word": "nearby",
+      "probability": 0.9032236337661743
+    },
+    {
+      "start": 48.36,
+      "end": 48.84,
+      "word": "kitchens.",
+      "probability": 0.9898900985717773
+    },
+    {
+      "start": 49.64,
+      "end": 49.78,
+      "word": "A",
+      "probability": 0.946334719657898
+    },
+    {
+      "start": 49.78,
+      "end": 49.94,
+      "word": "pilot",
+      "probability": 0.9648908972740173
+    },
+    {
+      "start": 49.94,
+      "end": 50.3,
+      "word": "must",
+      "probability": 0.9993021488189697
+    },
+    {
+      "start": 50.3,
+      "end": 50.62,
+      "word": "show",
+      "probability": 0.9977692365646362
+    },
+    {
+      "start": 50.62,
+      "end": 50.86,
+      "word": "whether",
+      "probability": 0.991388738155365
+    },
+    {
+      "start": 50.86,
+      "end": 51.16,
+      "word": "that",
+      "probability": 0.9927358627319336
+    },
+    {
+      "start": 51.16,
+      "end": 51.54,
+      "word": "creates",
+      "probability": 0.998045802116394
+    },
+    {
+      "start": 51.54,
+      "end": 51.9,
+      "word": "useful",
+      "probability": 0.9903879761695862
+    },
+    {
+      "start": 51.9,
+      "end": 52.38,
+      "word": "value",
+      "probability": 0.9990198612213135
+    },
+    {
+      "start": 52.38,
+      "end": 52.98,
+      "word": "after",
+      "probability": 0.962627112865448
+    },
+    {
+      "start": 52.98,
+      "end": 53.32,
+      "word": "software",
+      "probability": 0.8087283372879028
+    },
+    {
+      "start": 53.32,
+      "end": 53.8,
+      "word": "costs",
+      "probability": 0.991127073764801
+    },
+    {
+      "start": 53.8,
+      "end": 54.18,
+      "word": "and",
+      "probability": 0.9158543944358826
+    },
+    {
+      "start": 54.18,
+      "end": 54.44,
+      "word": "extra",
+      "probability": 0.9882779717445374
+    },
+    {
+      "start": 54.44,
+      "end": 54.74,
+      "word": "staff",
+      "probability": 0.9027625918388367
+    },
+    {
+      "start": 54.74,
+      "end": 55.1,
+      "word": "effort.",
+      "probability": 0.9963968396186829
+    },
+    {
+      "start": 55.1,
+      "end": 55.76,
+      "word": "We",
+      "probability": 0.870074987411499
+    },
+    {
+      "start": 55.76,
+      "end": 55.98,
+      "word": "would",
+      "probability": 0.9636368155479431
+    },
+    {
+      "start": 55.98,
+      "end": 56.24,
+      "word": "start",
+      "probability": 0.9946834444999695
+    },
+    {
+      "start": 56.24,
+      "end": 56.46,
+      "word": "with",
+      "probability": 0.9934139847755432
+    },
+    {
+      "start": 56.46,
+      "end": 56.64,
+      "word": "two",
+      "probability": 0.6260504722595215
+    },
+    {
+      "start": 56.64,
+      "end": 57.08,
+      "word": "kitchens,",
+      "probability": 0.987865149974823
+    },
+    {
+      "start": 57.7,
+      "end": 57.94,
+      "word": "comparing",
+      "probability": 0.9826390743255615
+    },
+    {
+      "start": 57.94,
+      "end": 58.76,
+      "word": "leftovers,",
+      "probability": 0.9505437612533569
+    },
+    {
+      "start": 59.72,
+      "end": 59.72,
+      "word": "shortages,",
+      "probability": 0.9641150832176208
+    },
+    {
+      "start": 60.34,
+      "end": 60.54,
+      "word": "and",
+      "probability": 0.9941486120223999
+    },
+    {
+      "start": 60.54,
+      "end": 60.8,
+      "word": "pickup",
+      "probability": 0.15868355333805084
+    },
+    {
+      "start": 60.8,
+      "end": 61.32,
+      "word": "completion",
+      "probability": 0.9834474325180054
+    },
+    {
+      "start": 61.32,
+      "end": 61.8,
+      "word": "against",
+      "probability": 0.9961714148521423
+    },
+    {
+      "start": 61.8,
+      "end": 61.98,
+      "word": "a",
+      "probability": 0.8801373243331909
+    },
+    {
+      "start": 61.98,
+      "end": 62.36,
+      "word": "baseline.",
+      "probability": 0.8303507566452026
+    },
+    {
+      "start": 63.08,
+      "end": 63.5,
+      "word": "Mealers",
+      "probability": 0.42612532200291753
+    },
+    {
+      "start": 63.5,
+      "end": 63.84,
+      "word": "is",
+      "probability": 0.9662702083587646
+    },
+    {
+      "start": 63.84,
+      "end": 64.0,
+      "word": "a",
+      "probability": 0.9685649275779724
+    },
+    {
+      "start": 64.0,
+      "end": 64.42,
+      "word": "synthetic",
+      "probability": 0.9565802216529846
+    },
+    {
+      "start": 64.42,
+      "end": 64.86,
+      "word": "MVP,",
+      "probability": 0.958986759185791
+    },
+    {
+      "start": 65.54,
+      "end": 65.84,
+      "word": "customers,",
+      "probability": 0.9399377703666687
+    },
+    {
+      "start": 66.32,
+      "end": 66.62,
+      "word": "revenue,",
+      "probability": 0.9780237078666687
+    },
+    {
+      "start": 67.02,
+      "end": 67.24,
+      "word": "and",
+      "probability": 0.996025562286377
+    },
+    {
+      "start": 67.24,
+      "end": 67.52,
+      "word": "savings",
+      "probability": 0.05254839360713959
+    },
+    {
+      "start": 67.52,
+      "end": 68.02,
+      "word": "remain",
+      "probability": 0.9171263575553894
+    },
+    {
+      "start": 68.02,
+      "end": 68.52,
+      "word": "unproven.",
+      "probability": 0.9610839486122131
+    },
+    {
+      "start": 69.1,
+      "end": 69.24,
+      "word": "The",
+      "probability": 0.9857876300811768
+    },
+    {
+      "start": 69.24,
+      "end": 69.46,
+      "word": "next",
+      "probability": 0.9983776807785034
+    },
+    {
+      "start": 69.46,
+      "end": 69.6,
+      "word": "step",
+      "probability": 0.9264423251152039
+    },
+    {
+      "start": 69.6,
+      "end": 69.82,
+      "word": "is",
+      "probability": 0.9956413507461548
+    },
+    {
+      "start": 69.82,
+      "end": 69.9,
+      "word": "an",
+      "probability": 0.9711586236953735
+    },
+    {
+      "start": 69.9,
+      "end": 70.14,
+      "word": "operator",
+      "probability": 0.786861002445221
+    },
+    {
+      "start": 70.14,
+      "end": 70.44,
+      "word": "pilot.",
+      "probability": 0.9772341251373291
+    }
+  ]
+}

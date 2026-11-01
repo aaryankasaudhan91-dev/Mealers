@@ -1,0 +1,163 @@
+{
+  "fps": 30,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "speech_speed": 1.0,
+  "scenes": [
+    {
+      "start": 0,
+      "label": "The problem",
+      "title": "Campus lunch should be simple.",
+      "description": "Kitchens prepare before they know where people will eat.",
+      "image": true
+    },
+    {
+      "start": 5.92,
+      "label": "The idea",
+      "title": "Choose before cooking.",
+      "description": "One caterer. Nearby campus kitchens.",
+      "cards": [
+        {
+          "title": "Diner choices",
+          "detail": "Voluntary meal commitments",
+          "cue": 5.92
+        },
+        {
+          "title": "Nearby kitchens",
+          "detail": "Coordinate under one operator",
+          "cue": 8.3
+        },
+        {
+          "title": "Before preparation",
+          "detail": "Give staff time to plan",
+          "cue": 11.0
+        }
+      ]
+    },
+    {
+      "start": 13.08,
+      "label": "For diners",
+      "title": "Check. Confirm. Collect.",
+      "description": "Review your meal and pickup details. Check dietary needs with kitchen staff.",
+      "cards": [
+        {
+          "title": "Check the meal",
+          "detail": "Walking distance and declared allergens",
+          "cue": 13.08
+        },
+        {
+          "title": "Confirm a suitable option",
+          "detail": "An explicit booking before the cutoff",
+          "cue": 17.08
+        },
+        {
+          "title": "Collect with a code",
+          "detail": "Kitchen staff validate your booking",
+          "cue": 18.9
+        }
+      ]
+    },
+    {
+      "start": 21.86,
+      "label": "For kitchen teams",
+      "title": "Managers keep control.",
+      "description": "Booking is a commitment. Collection is recorded separately.",
+      "cards": [
+        {
+          "title": "Demand + buffer",
+          "detail": "Committed demand and walk-in capacity",
+          "cue": 21.86
+        },
+        {
+          "title": "Approve preparation",
+          "detail": "Managers decide the quantity",
+          "cue": 25.44
+        },
+        {
+          "title": "Record actual outcomes",
+          "detail": "Collection and leftovers separately",
+          "cue": 26.8
+        }
+      ]
+    },
+    {
+      "start": 30.6,
+      "label": "The proposed business model",
+      "title": "A subscription in rupees.",
+      "description": "Pricing must be validated with campus operators.",
+      "cards": [
+        {
+          "title": "Who pays?",
+          "detail": "Proposed customer: the campus caterer",
+          "cue": 30.6
+        },
+        {
+          "title": "Monthly subscription",
+          "detail": "Per participating kitchen",
+          "cue": 35.08
+        },
+        {
+          "title": "INR pricing (₹)",
+          "detail": "Price and willingness to pay are unvalidated",
+          "cue": 38.32
+        }
+      ]
+    },
+    {
+      "start": 42.3,
+      "label": "The focus to test",
+      "title": "Coordinate nearby kitchens.",
+      "description": "A pilot must test the value after software costs and extra staff effort.",
+      "cards": [
+        {
+          "title": "Already available",
+          "detail": "Forecasting and pre-order tools",
+          "cue": 42.3
+        },
+        {
+          "title": "Mealers focus",
+          "detail": "Voluntary coordination across kitchens",
+          "cue": 45.72
+        },
+        {
+          "title": "Value must be demonstrated",
+          "detail": "Compare against simpler alternatives",
+          "cue": 49.64
+        }
+      ]
+    },
+    {
+      "start": 55.1,
+      "label": "The pilot",
+      "title": "Start with two kitchens.",
+      "description": "Compare outcomes against a baseline.",
+      "cards": [
+        {
+          "title": "Two kitchens",
+          "detail": "One operator; comparable service days",
+          "cue": 55.1
+        },
+        {
+          "title": "Leftovers + shortages",
+          "detail": "Measure both sides of the service",
+          "cue": 58.32
+        },
+        {
+          "title": "Pickup completion",
+          "detail": "Track actual collection",
+          "cue": 60.0
+        }
+      ]
+    },
+    {
+      "start": 63.08,
+      "label": "The next step",
+      "title": "An operator pilot.",
+      "description": "Synthetic MVP. Customers, revenue and savings remain unproven.",
+      "image": true
+    }
+  ],
+  "listening_review": "not_performed"
+}

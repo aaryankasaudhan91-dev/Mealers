@@ -2,6 +2,7 @@ import {initOnboarding,startOnboarding} from './onboarding.js';
 import {createApi} from './api.js';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rupees=new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'});
 let state={user:null,tab:'login',authMode:'login',meals:[],bookings:[],diet:'any',avoid:[],maxWalk:15,loading:true},busy=false;
 let scrollyAnimId=null;
 
@@ -171,7 +172,7 @@ function mealCard(m){
       </div>
       <div class="meal-details">
         <span>Pickup ${time(m.pickup)}</span>
-        <strong>₹${m.price.toFixed(2)}</strong>
+        <strong>${rupees.format(m.price)}</strong>
       </div>
       <div class="availability">
         <span class="${m.available?'green':'red'}">${!m.open?'Booking closed':m.available?`${m.available} booking slots left`:'Fully booked'}</span>
@@ -251,14 +252,14 @@ function explore(){
     </div>
   </section>
   <section class="explainer glass" aria-label="Mealers explained">
-    <span class="eyebrow">WATCH THE WORKFLOW</span><h2>A clearer lunch plan in 20 seconds</h2>
-    <p>See how diners choose, confirm and collect while kitchen teams keep control of preparation.</p>
+    <span class="eyebrow">WATCH THE WORKFLOW</span><h2>A clearer plan for campus lunch</h2>
+    <p>In about 71 seconds, hear how Mealers works for diners and kitchen teams, its proposed rupee subscription and the pilot to test it.</p>
     <video controls playsinline preload="none" poster="/media/mealers-explainer.jpg" aria-label="Mealers workflow explainer">
       <source src="/media/mealers-explainer.mp4" type="video/mp4">
       <track kind="captions" src="/media/mealers-explainer.vtt" srclang="en" label="English" default>
       Your browser cannot play this video.
     </video>
-    <p class="field-hint">Concept illustration and synthetic demonstration. No measured savings are claimed. <a href="/media/mealers-explainer.mp4">Open the video</a></p>
+    <p class="field-hint">Concept illustration and synthetic demonstration. No measured savings are claimed. <a href="/media/mealers-explainer.mp4">Open the narrated video</a> · <a href="/media/mealers-explainer.txt">Read the transcript</a></p>
   </section>
   <section class="how">
     <span class="eyebrow">SIMPLE BY DESIGN</span>
@@ -503,8 +504,8 @@ function about(){
                   <span>CO₂ Avoided / Day</span>
                 </div>
                 <div class="sim-metric">
-                  <strong id="dollars-saved">Not measured</strong>
-                  <span>Ingredient Value Kept</span>
+                  <strong id="rupees-saved">Not measured</strong>
+                  <span>Ingredient Value Kept (₹)</span>
                 </div>
               </div>
             </div>
@@ -663,7 +664,7 @@ function initScrollytelling(){
       if($('#diner-val'))$('#diner-val').textContent=val;
       if($('#meals-saved'))$('#meals-saved').textContent='Not measured';
       if($('#co2-avoided'))$('#co2-avoided').textContent=Math.round(val*0.27*2.5)+' kg';
-      if($('#dollars-saved'))$('#dollars-saved').textContent='Not measured';
+      if($('#rupees-saved'))$('#rupees-saved').textContent='Not measured';
     };
     slider.oninput=updateSim;
     updateSim();
@@ -1162,7 +1163,7 @@ function bind(){
       <div class="modal-meal">
         <h3>${esc(m.name)}</h3>
         <p>${esc(m.kitchen)} · ${m.walk} min walk</p>
-        <p>Pickup ${time(m.pickup)} · ₹${m.price.toFixed(2)}</p>
+        <p>Pickup ${time(m.pickup)} · ${rupees.format(m.price)}</p>
         <p>Declared allergens: ${esc(m.allergens.join(', ')||'None declared')}</p>
       </div>
       <label class="consent"><input type="checkbox" required> I have reviewed the meal and pickup details. I will check dietary needs with kitchen staff.</label>
