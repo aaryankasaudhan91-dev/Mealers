@@ -171,7 +171,7 @@ function mealCard(m){
       </div>
       <div class="meal-details">
         <span>Pickup ${time(m.pickup)}</span>
-        <strong>S$${m.price.toFixed(2)}</strong>
+        <strong>₹${m.price.toFixed(2)}</strong>
       </div>
       <div class="availability">
         <span class="${m.available?'green':'red'}">${!m.open?'Booking closed':m.available?`${m.available} booking slots left`:'Fully booked'}</span>
@@ -1162,7 +1162,7 @@ function bind(){
       <div class="modal-meal">
         <h3>${esc(m.name)}</h3>
         <p>${esc(m.kitchen)} · ${m.walk} min walk</p>
-        <p>Pickup ${time(m.pickup)} · S$${m.price.toFixed(2)}</p>
+        <p>Pickup ${time(m.pickup)} · ₹${m.price.toFixed(2)}</p>
         <p>Declared allergens: ${esc(m.allergens.join(', ')||'None declared')}</p>
       </div>
       <label class="consent"><input type="checkbox" required> I have reviewed the meal and pickup details. I will check dietary needs with kitchen staff.</label>
@@ -1214,7 +1214,7 @@ function bind(){
         <label>Kitchen<input name="kitchen" maxlength="120" required></label>
         <label class="wide">Description<textarea name="description" maxlength="400" required></textarea></label>
         <label>Meal category<select name="diet"><option value="vegan">Vegan</option><option value="vegetarian">Vegetarian</option><option value="regular">Regular</option></select></label>
-        <label>Price in S$<input name="price" type="number" min="0" max="100" step=".01" required></label>
+        <label>Price in ₹ (INR)<input name="price" type="number" min="0" max="100" step=".01" required></label>
         <label>Total portions<input name="capacity" type="number" min="1" max="1000" value="100" required></label>
         <label>Walk-in buffer<input name="buffer" type="number" min="0" value="15" required></label>
         <label>Walk in minutes<input name="walk" type="number" min="1" max="30" value="5" required></label>
