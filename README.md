@@ -1,117 +1,126 @@
-# Mealers MVP
+# Mealers
 
-Mealers is a local campus meal coordination demo with a minimalist light glass interface matching the pitch palette. All identities, records and menus are synthetic. No real payments or measured savings are claimed.
+**Campus meal coordination before cooking.**
 
-## Separate applications
+[Open the demo](https://mealers.vercel.app/) · [Workflow guide](./WORKFLOW.md)
 
-- `backend/` contains the MongoDB API, database configuration, packages and tests.
-- `frontend/` contains the web interface, static assets and API proxy.
-- Ready for deployment on **Render** (backend & frontend) and **Vercel** (frontend).
+Mealers helps a campus caterer coordinate voluntary meal choices across nearby kitchens. Diners choose suitable meals, managers review committed demand, and staff record pickup and service totals. The interface uses a minimalist light glass theme with a shared web logo and favicon.
 
----
+> **Demo status:** use synthetic data only. No real payments, paying customers, partnerships or measured savings are claimed. Switchable demo identities are not production authentication.
 
-## Deployment to Render & Vercel
+## Product workflow
 
-### Architecture Recommendation
+1. **Publish:** a kitchen manager sets the menu, capacity, walk-in buffer, preparation cutoff and pickup time.
+2. **Choose:** a diner filters by meal preference, walking distance and declared allergens. Always confirm dietary needs with staff.
+3. **Confirm or switch:** the API checks eligibility and capacity. Database transactions protect an existing booking if a replacement fails; request keys prevent duplicate confirmations.
+4. **Collect:** staff redeem the pickup code once. Confirmation and actual collection are separate events.
+5. **Reconcile:** managers approve preparation quantities and record prepared, served and unused portions.
 
-- **Backend**: Deploy on **Render** (Node.js Web Service). Render supports long-running Node processes with persistent MongoDB connection pooling and transaction support.
-- **Frontend**: Deploy on **Vercel** (Edge/Serverless Static + API Proxy) OR on **Render** (Node.js Web Service).
+The MVP permits one active booking per diner and one pickup timestamp per service. Independent pickup-slot limits, payments, incentive payouts, forecasting and a multi-day meal calendar remain outside the current scope.
 
----
+## Business hypothesis
 
-### 1. Deploy Backend on Render
+The proposed buyer is one caterer operating multiple nearby campus cafeterias. The proposed revenue model is a monthly subscription per participating kitchen, priced in Indian rupees. Pricing and willingness to pay need validation.
 
-1. Create a free MongoDB database on [MongoDB Atlas](https://www.mongodb.com/atlas). In Atlas **Network Access**, ensure access is allowed (`0.0.0.0/0` for cloud deployments).
-2. Push this repository to GitHub.
-3. In [Render Dashboard](https://dashboard.render.com/):
-   - **Option A (Blueprint - 1-Click)**:
-     - Click **New +** -> **Blueprint**.
-     - Select your GitHub repository. Render reads [`render.yaml`](file:///d:/Devanshi/Project%2024(Mealers)/models/t1/render.yaml) and provisions both backend and frontend automatically.
-     - When prompted, provide your `MONGODB_URI`.
-   - **Option B (Manual Web Service)**:
-     - Click **New +** -> **Web Service** -> Connect your repo.
-     - **Name**: `mealers-backend`
-     - **Root Directory**: `backend`
-     - **Runtime**: `Node`
-     - **Build Command**: `npm install`
-     - **Start Command**: `npm start`
-     - **Environment Variables**:
-       - `NODE_ENV`: `production`
-       - `DEMO_MODE`: `true`
-       - `MONGODB_DATABASE`: `mealers_demo`
-       - `FRONTEND_ORIGIN`: `*` (or your frontend domain once deployed)
-       - `MONGODB_URI`: `mongodb+srv://<user>:<password>@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority`
-4. Once deployed, Render gives you a backend URL (e.g. `https://mealers-backend.onrender.com`). Verify it by opening `https://mealers-backend.onrender.com/api/health`.
+Forecasting and pre-order tools already exist. Mealers focuses on voluntary coordination between kitchens before cooking. A proposed two-kitchen pilot would measure leftovers, unmet demand, pickup completion and additional staff time against a baseline. A confirmed switch is not automatically a saved meal. Net benefit must account for software cost, extra labour and any future incentives.
 
----
+## Explainer narration — Sarvam AI
 
-### 2. Deploy Frontend on Vercel
+[Sarvam AI Text to Speech](https://www.sarvam.ai/text-to-speech) is used in the explainer production workflow for Indian-English narration. The selected voice is **Shubh**, with a conversational, friendly delivery. The generated voice has been reviewed and approved for the explainer.
 
-1. Go to [Vercel Dashboard](https://vercel.com/) and click **Add New...** -> **Project**.
-2. Import your GitHub repository.
-3. In **Project Settings**:
-   - **Framework Preset**: Other
-   - **Root Directory**: Leave as `./` (or select `frontend/` — both are pre-configured with `vercel.json` and API proxies).
-   - Under **Environment Variables**, add:
-     - `BACKEND_URL`: `https://mealers-backend.onrender.com` (your Render backend URL).
-4. Click **Deploy**.
-5. Vercel will host the frontend CDN and automatically proxy all `/api/*` calls to your Render backend with streaming, cookie preservation, and zero CORS headaches.
+**Integration status:** exporting the approved Sarvam audio and replacing the earlier explainer audio is still in progress. The existing website video should not yet be described as using the final Sarvam narration.
 
----
+Sarvam is a media-production dependency, not a runtime dependency of the booking API. No Sarvam API key is required to run the Mealers MVP. Keep any production credentials in private environment variables; never commit them.
 
-### 3. Deploy Frontend on Render (Alternative)
+## Stack and repository layout
 
-If using Render for both backend and frontend:
-1. If using the [`render.yaml`](file:///d:/Devanshi/Project%2024(Mealers)/models/t1/render.yaml) Blueprint, Render automatically provisions `mealers-frontend` and links `BACKEND_URL` to `mealers-backend`.
-2. For manual setup:
-   - **Name**: `mealers-frontend`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Environment Variables**:
-     - `BACKEND_URL`: `https://mealers-backend.onrender.com`
+- **Frontend:** vanilla JavaScript, HTML and CSS; static assets, splash screen, first-visit guided tour and explainer player in `frontend/public/`.
+- **API proxy:** Node.js frontend server or Vercel catch-all functions forward same-origin `/api/*` requests to the configured backend.
+- **Backend:** Node.js HTTP API and MongoDB driver in `backend/`.
+- **Database:** MongoDB Atlas or a local replica set. Transactions require a replica set; standalone MongoDB is insufficient.
+- **Hosting configuration:** Vercel frontend, Render backend, with an optional Render frontend.
 
----
+```text
+backend/             API, database initialization, security helpers and tests
+frontend/            Static server, UI, onboarding, media and Vercel proxy
+api/                 Vercel proxy when the repository root is deployed
+.github/workflows/   Checks and integration-test workflow
+render.yaml          Render service configuration
+vercel.json          Root frontend deployment configuration
+```
 
-## Local Development
+## Local setup
 
-Fill in `MONGODB_URI` in `backend/.env`.
+Use a supported Node.js version compatible with the package engine requirements. Install dependencies separately:
 
-Start backend:
 ```powershell
-cd backend
+npm --prefix backend install
+npm --prefix frontend install
+```
+
+Create or update `backend/.env` with your own values:
+
+```dotenv
+PORT=3001
+HOST=127.0.0.1
+MONGODB_URI=
+MONGODB_DATABASE=mealers_demo
+FRONTEND_ORIGIN=http://localhost:3000
+DEMO_MODE=true
+```
+
+Set `frontend/.env`:
+
+```dotenv
+PORT=3000
+HOST=127.0.0.1
+BACKEND_URL=http://127.0.0.1:3001
+```
+
+Run each application in its own terminal:
+
+```powershell
+# Terminal 1, from backend/
+npm start
+
+# Terminal 2, from frontend/
 npm start
 ```
 
-Start frontend:
-```powershell
-cd frontend
-npm start
-```
-
-Or from workspace root:
-```powershell
-npm run start:backend
-npm run start:frontend
-```
-
-Open http://localhost:3000.
-
----
+Alternatively, use `npm run start:backend` and `npm run start:frontend` from the repository root. Open [localhost:3000](http://localhost:3000). Check `/api/health`: the database must report connected before relying on bookings. Missing database configuration should produce a setup message, not simulated success.
 
 ## Demo journey
 
-Choose Alex's diner demo, switch the existing Commons Kitchen booking to Garden Kitchen and note the pickup code under My meals. Choose the kitchen-team demo and confirm pickup. Approve a preparation plan, publish a meal, record service totals and view the demo report. Sam's diner demo begins with no reservation.
+Use **Sam** for a fresh diner flow, **Alex** for a seeded booking, or **Kitchen Team** for publishing, preparation approval, pickup and reconciliation. Prices are displayed in **INR (₹)**.
 
-Seed service cutoffs are two hours after initial database setup. Existing data persists. Publish new services once cutoffs expire. The current MVP permits one active meal at a time and one pickup time per service. It does not yet model independently limited pickup slots, real payments, incentives, production users or a multi-day meal calendar.
+Seeded service cutoffs are two hours after initial database setup; restarting does not reset them. When they expire, use the Kitchen workspace to publish a new service. Existing records are retained.
 
-## Security notice
+## Deployment
 
-Demo identities are intentionally switchable and are not production authentication. The warning stays visible in the interface. Use synthetic data only. A real pilot requires verified identity, production session controls, appropriate data retention, operational monitoring, backups and menu/food-safety processes. No secrets should enter frontend files or source control.
+### Backend on Render
 
-## Checks
+- Root directory: `backend`; build: `npm install`; start: `npm start`.
+- Set `MONGODB_URI` privately and choose a dedicated database such as `mealers_demo`. Configure database network access for the deployment deliberately.
+- Set `FRONTEND_ORIGIN` to the exact frontend origin, such as `https://mealers.vercel.app`; do not use `*`.
+- Use `DEMO_MODE=true` only for a clearly labelled synthetic demo. Turning it off does not by itself make the app production-ready.
+- Verify `/api/health` after deployment.
+
+### Frontend on Vercel or Render
+
+- Vercel supports the repository root or `frontend/`, with the corresponding checked-in proxy configuration.
+- Set `BACKEND_URL` to the full HTTPS backend origin, including `https://`, without credentials, a path or query parameters.
+- For Render frontend hosting, use root `frontend`, build `npm install`, start `npm start`, and the same `BACKEND_URL`.
+- Review [render.yaml](./render.yaml), [root Vercel configuration](./vercel.json) and [frontend Vercel configuration](./frontend/vercel.json). Config files alone do not prove a successful deployed booking workflow.
+
+## Security and checks
+
+The implementation includes salted scrypt password hashing, diner-only self-registration, HttpOnly session cookies, server-side role/ownership checks, explicit allowed origins and request validation. Legacy prototype password records require secure reprovisioning; they are not silently accepted. Demo accounts remain intentionally switchable when enabled.
+
+Before a real pilot, establish verified operator membership, durable production session handling, appropriate rate limits and monitoring, backups, retention rules and operational food-safety procedures. Keep the visible security notice and all synthetic-data labels.
 
 ```powershell
 npm run check
+npm test
 ```
-Runs syntax checks across both backend and frontend.
+
+Tests cover booking consistency, last-slot contention, switch rollback, pickup replay, validation and password handling. MongoDB integration tests require a reachable replica set. Local runs may skip those tests without one; CI is configured to fail if the database prerequisite is missing. A green syntax check is not an end-to-end deployment certification.
